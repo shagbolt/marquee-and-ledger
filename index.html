@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marquee &amp; Ledger — Hollywood Studio Tycoon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+
+</head>
+<body>
+<div id="fatalErrorBanner" style="display:none; position:fixed; inset:0; z-index:9999; background:#14171F; color:#F3ECDA; font-family:Georgia,serif; padding:28px; box-sizing:border-box; overflow-y:auto;">
+  <div style="max-width:520px; margin:40px auto; border:1px solid #C9A227; border-radius:8px; padding:24px;">
+    <div style="font-size:1.4rem; font-weight:bold; color:#C9A227; margin-bottom:10px;">🎬 Something went wrong loading Marquee &amp; Ledger</div>
+    <div style="margin-bottom:14px; line-height:1.5;">This page hit an error before it could finish loading. This is most likely to happen when opening the file directly inside another app's built-in preview (Notes, Drafts, Files, a chat app's viewer, and similar). Try one of these:</div>
+    <ul style="line-height:1.6; margin:0 0 14px 20px; padding:0;">
+      <li>Open the file directly in <strong>Safari</strong> or <strong>Chrome</strong> rather than an in-app preview.</li>
+      <li>If you're viewing it from a share sheet or "Quick Look," use "Open in Safari" or "Open in Browser" if offered.</li>
+      <li>Reload the page once — a one-time hiccup while other things on the page were loading is also possible.</li>
+    </ul>
+    <div style="font-size:0.82rem; color:#9a9484; border-top:1px dashed #4a4636; padding-top:10px; margin-top:10px;">Technical detail: <span id="fatalErrorDetail" style="font-family:'Courier New',monospace;"></span></div>
+  </div>
+</div>
+<script>
+  // Registered outside the main script so it stays active even if the game script below
+  // fails partway through — the goal is that a startup error is never silent.
+  (function(){
+    var shown = false;
+    function showFatalBanner(message){
+      if(shown) return; // only show once — a wall of repeated banners helps nobody
+      shown = true;
+      var banner = document.getElementById('fatalErrorBanner');
+      var detail = document.getElementById('fatalErrorDetail');
+      if(detail) detail.textContent = message || '(no message available)';
+      if(banner) banner.style.display = 'block';
+    }
+    window.addEventListener('error', function(e){
+      showFatalBanner(e && e.message ? e.message : 'Unknown error');
+    });
+    window.addEventListener('unhandledrejection', function(e){
+      showFatalBanner(e && e.reason ? String(e.reason) : 'Unknown promise rejection');
+    });
+    // If the studio creation screen hasn't appeared within a few seconds, something
+    // silently failed even without throwing a catchable error — surface it anyway.
+    window.setTimeout(function(){
+      var tierList = document.getElementById('tierOptionsList');
+      if(tierList && tierList.children.length === 0){
+        showFatalBanner('Studio tier list never populated (no JS error was thrown, so this is likely a restricted feature in this viewer).');
+      }
+    }, 4000);
+  })();
+</script>
+<div id="app">
+
+  <!-- ===================== MASTHEAD ===================== -->
+  <header class="masthead">
+    <div class="brand">
+      <h1>🎬 Marquee &amp; Ledger</h1>
+      <div>
+        <span class="eyebrow">Hollywood Studio Tycoon — Trade Daily</span><br>
+        <input id="studioNameInput" type="text" maxlength="30" aria-label="Studio name">
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-block">
+        <span class="label">Studio Cash</span>
+        <span class="value" id="cashDisplay">$0</span>
+      </div>
+      <div class="stat-block">
+        <span class="label">Prestige</span>
+        <span class="value" id="prestigeDisplay">50</span>
+        <div class="prestige-bar-track"><div class="fill" id="prestigeBarFill" style="width:50%"></div></div>
+      </div>
+      <div class="stat-block">
+        <span class="label">Calendar</span>
+        <span class="value" id="weekYearDisplay">Week 1 • Year 1</span>
+      </div>
+      <div class="stat-block">
+        <span class="label">Industry Rank</span>
+        <span class="value" id="rankDisplay">#1 of 4</span>
+      </div>
+      <button id="themeToggleBtn" title="Switch between dark and light theme">🌙 Dark</button>
+      <button id="resetBtn" title="Start a brand new studio">🔄 Reset</button>
+    </div>
+  </header>
+
+  <div class="layout-grid">
+
+    <!-- ===================== PERSISTENT LEFT SIDEBAR ===================== -->
+    <aside class="col-left">
+
+      <section class="panel" id="studioDataPanel">
+        <h2>💼 Studio Office</h2>
+        <p class="hint" id="studioTierLine">Independent • Weekly Overhead $45,000</p>
+        <div class="two-col">
+          <button class="btn-secondary" id="saveGameBtn">💾 Save</button>
+          <button class="btn-secondary" id="loadGameBtn">📂 Load</button>
+        </div>
+        <div class="two-col" style="margin-top:8px;">
+          <button class="btn-secondary" id="exportSaveBtn">⬇ Export File</button>
+          <button class="btn-secondary" id="importSaveBtn">⬆ Import File</button>
+        </div>
+        <input type="file" id="importFileInput" accept="application/json" class="hidden">
+        <p class="hint" id="saveStatusLine" style="margin-top:8px;min-height:14px;"></p>
+      </section>
+
+      <section class="panel" id="prestigePanel">
+        <h2>🎖 Studio Prestige <span class="sub">Meter</span></h2>
+        <div class="prestige-value-big" id="prestigeMeterValue">50</div>
+        <div class="prestige-meter-track">
+          <div class="tier-seg t1"></div>
+          <div class="tier-seg t2"></div>
+          <div class="tier-seg t3"></div>
+          <div class="tier-seg t4"></div>
+          <div class="tier-seg t5"></div>
+          <div class="prestige-pointer" id="prestigeMeterPointer" style="left:50%"></div>
+        </div>
+        <div class="prestige-tier-label" id="prestigeTierLabel">Mid-Tier Studio</div>
+        <p class="hint" style="margin-top:10px;">Moves with box office &amp; streaming performance, and with critic/audience reviews.</p>
+        <ul class="prestige-history-list" id="prestigeHistoryList"></ul>
+      </section>
+
+      <section class="panel" id="timeControls">
+        <h2>⏱ Studio Calendar</h2>
+        <p class="hint">The lot runs on a 52-week release calendar. Skip idle weeks to let rivals make their moves, or save up cash before your next shoot.</p>
+        <div class="two-col">
+          <select id="skipWeeksSelect" aria-label="Weeks to skip">
+            <option value="1">1 week</option>
+            <option value="2">2 weeks</option>
+            <option value="4" selected>4 weeks</option>
+            <option value="8">8 weeks</option>
+          </select>
+          <button class="btn-secondary" id="skipWeeksBtn">⏭ Skip Ahead</button>
+        </div>
+        <button class="btn-secondary" id="skipYearBtn" style="width:100%;margin-top:8px;">⏭ Skip to Year End</button>
+      </section>
+
+      <section class="panel" id="newsPanel">
+        <h2>📰 Industry Wire</h2>
+        <ul id="newsFeedList"></ul>
+      </section>
+
+    </aside>
+
+    <!-- ===================== TABBED MAIN AREA ===================== -->
+    <main class="col-main">
+
+      <nav class="tab-nav" id="tabNav">
+        <button class="tab-btn active" data-tab="dashboard">📊 Dashboard</button>
+        <button class="tab-btn" data-tab="development">🎥 Development</button>
+        <button class="tab-btn" data-tab="finance">💰 Finance</button>
+        <button class="tab-btn" data-tab="marketing">📣 Marketing</button>
+        <button class="tab-btn" data-tab="distribution">📺 Distribution</button>
+        <button class="tab-btn" data-tab="competitors">🏢 Competitors</button>
+        <button class="tab-btn" data-tab="international">🌍 International</button>
+        <button class="tab-btn" data-tab="research">📈 Research</button>
+        <button class="tab-btn" data-tab="history">📜 History</button>
+        <button class="tab-btn" data-tab="awards">🏆 Awards</button>
+        <button class="tab-btn" data-tab="studio">🏛 Studio</button>
+        <button class="tab-btn" data-tab="franchises">🎞 Franchises</button>
+      </nav>
+
+      <!-- ---------- DASHBOARD ---------- -->
+      <div class="tab-panel active" id="tab-dashboard">
+        <section class="panel marquee-panel hidden" id="filmingPanel">
+          <h2>🎥 Now Filming <span class="sub">Production Shoot</span></h2>
+          <h3 id="filmingTitle"></h3>
+          <p id="filmingMeta"></p>
+          <div class="now-showing-stats">
+            <div class="ns-stat"><span class="label">Week</span><span class="value" id="filmingWeekDisplay">0 / 0</span></div>
+            <div class="ns-stat"><span class="label">Crew Morale</span><span class="value" id="filmingMoraleDisplay">70</span></div>
+            <div class="ns-stat"><span class="label">Extra Spend</span><span class="value" id="filmingSpendDisplay">$0</span></div>
+          </div>
+          <button class="btn-secondary" id="filmingFastForwardBtn" style="margin-bottom:10px;">⏩ Skip to Wrap</button>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Week</th><th>Update</th></tr></thead>
+              <tbody id="filmingTickerBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel marquee-panel" id="tickerPanel">
+          <h2>🎞 Now Showing <span class="sub">Box Office Ticker</span></h2>
+
+          <div id="nowShowingPlaceholder">
+            <span class="big-emoji">🎥</span>
+            The screening room is dark. Green-light a picture to watch it roll out, week by week.
+          </div>
+
+          <div id="nowShowingContent" class="hidden">
+            <h3 id="nowShowingTitle"></h3>
+            <p id="nowShowingMeta"></p>
+            <div class="now-showing-stats">
+              <div class="ns-stat"><span class="label">Elapsed</span><span class="value" id="weeksElapsedDisplay">Week 0</span></div>
+              <div class="ns-stat"><span class="label">Theaters</span><span class="value" id="theatersNowDisplay">0</span></div>
+              <div class="ns-stat"><span class="label">Cumulative Gross</span><span class="value" id="cumulativeBig">$0</span></div>
+              <div class="ns-stat"><span class="label">🍅 Tomatometer</span><span class="value review-critics" id="criticsScoreDisplay">—</span></div>
+              <div class="ns-stat"><span class="label">🍿 Popcornmeter</span><span class="value review-audience" id="audienceScoreDisplay">—</span></div>
+            </div>
+            <div class="review-summary-block" id="reviewSummaryBlock">
+              <span class="divergence-tag" id="divergenceTag"></span>
+              <p class="review-quote" id="criticsBlurbText"></p>
+              <p class="review-quote" id="audienceBlurbText"></p>
+            </div>
+            <button class="btn-secondary" id="fastForwardBtn" style="margin-bottom:10px;">⏩ Skip to Final Gross</button>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Week</th><th>Theaters</th><th>Weekly Gross</th><th>Cumulative</th><th>Notes</th></tr></thead>
+                <tbody id="tickerTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="slotReportPanel">
+          <h2>📋 Box Office Slot Report</h2>
+          <p class="hint">Who else is opening the week you release?</p>
+          <div id="slotReportBody" class="empty">Release a movie to see the competing slate.</div>
+        </section>
+      </div>
+
+      <!-- ---------- DEVELOPMENT ---------- -->
+      <div class="tab-panel" id="tab-development">
+        <section class="panel" id="scriptDevPanel">
+          <h2>📝 Script Development</h2>
+          <p class="hint">Write or paste a 50-500 word synopsis. Analysis looks at concepts and themes, not length — padding won't help. Optional: skip this and your picture uses neutral story stats, exactly like before.</p>
+          <textarea id="synopsisInput" rows="6" placeholder="A washed-up bounty hunter takes one last job to track down the daughter she abandoned twenty years ago..." maxlength="3000" style="width:100%;background:var(--backdrop);border:1px solid var(--border);color:var(--ink);padding:9px 10px;border-radius:6px;font-family:var(--font-body);font-size:0.88rem;resize:vertical;"></textarea>
+          <div class="range-row" style="margin-top:4px;"><span class="range-value" id="synopsisWordCount">0 words</span></div>
+          <button class="btn-secondary" id="analyzeScriptBtn" style="width:100%;margin-top:8px;">🔍 Analyze Script</button>
+
+          <div id="scriptReportBlock" class="hidden" style="margin-top:14px;">
+            <h3 class="finance-subhead" style="margin-top:0;">Analysis Report</h3>
+            <div id="scriptReportBody"></div>
+
+            <h3 class="finance-subhead">Rewrites</h3>
+            <p class="hint">Each option can be used once per script. Costs money and a week of development time.</p>
+            <div id="rewriteOptionsList"></div>
+
+            <button class="btn-secondary" id="clearScriptBtn" style="width:100%;margin-top:10px;">🗑 Discard Script</button>
+          </div>
+        </section>
+
+        <section class="panel" id="preprodPanel">
+          <h2>🎥 Green-Light a Picture</h2>
+          <p class="hint">Assemble your production, set your budgets, and pick your release strategy. Fees rise and fall with each talent's track record.</p>
+
+          <label for="movieTitleInput">Movie Title</label>
+          <input type="text" id="movieTitleInput" placeholder="e.g. Midnight Horizon" maxlength="60">
+
+          <label for="movieTaglineInput">Tagline</label>
+          <input type="text" id="movieTaglineInput" placeholder="e.g. Some secrets never sleep." maxlength="80">
+
+          <label for="genreSelect">Genre</label>
+          <select id="genreSelect">
+            <option value="Action">Action</option>
+            <option value="Animation">Animation</option>
+            <option value="Comedy">Comedy</option>
+            <option value="Drama">Drama</option>
+            <option value="Horror">Horror</option>
+            <option value="Sci-Fi">Sci-Fi</option>
+          </select>
+
+          <label for="writerSelect">Writer</label>
+          <select id="writerSelect"></select>
+
+          <label for="directorSelect">Director</label>
+          <select id="directorSelect"></select>
+
+          <label for="producerSelect">Producer</label>
+          <select id="producerSelect"></select>
+
+          <label for="composerSelect">Composer</label>
+          <select id="composerSelect"></select>
+
+          <div class="two-col">
+            <div>
+              <label for="star1Select">Lead Star 1</label>
+              <select id="star1Select"></select>
+            </div>
+            <div>
+              <label for="star2Select">Lead Star 2</label>
+              <select id="star2Select"></select>
+            </div>
+          </div>
+
+          <label for="sfxRange">Special Effects Budget</label>
+          <div class="range-row"><input type="range" id="sfxRange" min="0" max="60000000" step="250000" value="7800000"><span class="range-value" id="sfxValue"></span></div>
+
+          <label for="marketingRange">Marketing Budget</label>
+          <div class="range-row"><input type="range" id="marketingRange" min="0" max="60000000" step="250000" value="4200000"><span class="range-value" id="marketingValue"></span></div>
+
+          <label for="theaterRange">Target Theater Count</label>
+          <div class="range-row"><input type="range" id="theaterRange" min="100" max="4000" step="50" value="4000"><span class="range-value" id="theaterValue"></span></div>
+
+          <label>Marketing Channels</label>
+          <div class="checkbox-grid">
+            <div class="checkbox-item"><input type="checkbox" id="chTrailers" checked><label for="chTrailers" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">Trailers</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="chBillboards"><label for="chBillboards" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">Billboards</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="chOnline" checked><label for="chOnline" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">Online Publicity</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="chTV"><label for="chTV" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">TV Spots</label></div>
+          </div>
+
+          <h3 class="finance-subhead">Release Strategy &amp; Calendar</h3>
+          <label for="strategySelect">Release Strategy</label>
+          <select id="strategySelect">
+            <option value="wide">Wide Release</option>
+            <option value="limited">Limited Release</option>
+            <option value="platform">Platform Release</option>
+            <option value="holiday">Holiday Release</option>
+            <option value="summer">Summer Blockbuster</option>
+            <option value="awardsSeason">Awards Season</option>
+          </select>
+          <p class="hint" id="strategyDescText"></p>
+
+          <label for="scheduleRange">Schedule Release</label>
+          <div class="range-row"><input type="range" id="scheduleRange" min="0" max="52" step="1" value="0"><span class="range-value" id="scheduleValueText">ASAP</span></div>
+          <div id="calendarPreview"></div>
+
+          <h3 class="finance-subhead">Production Details</h3>
+          <label for="runtimeRange">Runtime</label>
+          <div class="range-row"><input type="range" id="runtimeRange" min="80" max="200" step="5" value="110"><span class="range-value" id="runtimeValueText">110 min</span></div>
+
+          <div class="two-col">
+            <div>
+              <label for="ratingSelect">MPAA Rating</label>
+              <select id="ratingSelect">
+                <option value="G">G</option>
+                <option value="PG">PG</option>
+                <option value="PG-13" selected>PG-13</option>
+                <option value="R">R</option>
+              </select>
+            </div>
+            <div>
+              <label for="demographicSelect">Target Demographic</label>
+              <select id="demographicSelect">
+                <option value="Kids & Family">Kids &amp; Family</option>
+                <option value="Teens">Teens</option>
+                <option value="Young Adults">Young Adults</option>
+                <option value="Adults">Adults</option>
+                <option value="General Audience" selected>General Audience</option>
+              </select>
+            </div>
+          </div>
+          <p class="hint" id="propertyFitText"></p>
+
+          <label for="festivalSelect">Festival Premiere</label>
+          <select id="festivalSelect">
+            <option value="none">No Festival Premiere</option>
+            <option value="cascade">Cascade Film Festival — $80,000 submission</option>
+            <option value="goldenreel">Golden Reel Festival — $120,000 submission</option>
+            <option value="lakeside">Lakeside Independent Festival — $60,000 submission</option>
+            <option value="autumn">Autumn International Festival — $150,000 submission</option>
+          </select>
+          <p class="hint" id="festivalDescText"></p>
+
+          <div id="budgetSummaryBody"></div>
+          <div id="formWarning"></div>
+          <button class="btn-primary" id="releaseBtn">🎬 Review for Greenlight</button>
+        </section>
+      </div>
+
+      <!-- ---------- FINANCE ---------- -->
+      <div class="tab-panel" id="tab-finance">
+        <section class="panel">
+          <h2>💰 Finance Department</h2>
+          <p class="hint">Self-funding is free but limited by cash on hand. Borrowing or bringing in outside money lets you swing bigger — every option has a cost.</p>
+
+          <h3 class="finance-subhead">🏦 Bank Loan</h3>
+          <p class="hint">Fixed weekly repayment over 52 weeks. Your prestige sets the rate: <strong id="loanRateDisplay">11%</strong> APR. Max loan right now: <strong id="loanMaxDisplay">$0</strong>.</p>
+          <div class="range-row"><input type="range" id="loanAmountRange" min="0" max="10000000" step="250000" value="1000000"><span class="range-value" id="loanAmountValue">$1,000,000</span></div>
+          <button class="btn-secondary" id="takeLoanBtn" style="width:100%;">Take Loan</button>
+          <div id="activeLoansList" class="finance-deal-list"></div>
+
+          <h3 class="finance-subhead">🤝 Private Investors</h3>
+          <p class="hint">Upfront cash, no fixed payments — but they take a cut of every profitable release from here on. Current offer: <strong id="investorTermsDisplay">—</strong>.</p>
+          <button class="btn-secondary" id="takeInvestorBtn" style="width:100%;">Accept Investor Deal</button>
+
+          <h3 class="finance-subhead">🏛 Private Equity</h3>
+          <p class="hint" id="equityGateHint">Unlocks at 40 Prestige and 2+ releases. Bigger checks, bigger cuts.</p>
+          <button class="btn-secondary" id="takeEquityBtn" style="width:100%;" disabled>Accept Equity Deal</button>
+
+          <div id="profitShareDealsList" class="finance-deal-list"></div>
+
+          <h3 class="finance-subhead">📈 Go Public</h3>
+          <p class="hint" id="ipoGateHint">Unlocks at 70 Prestige and 5+ releases. A massive one-time raise — but quarterly earnings calls begin, and badly missing targets triggers a shareholder revolt.</p>
+          <button class="btn-primary" id="goPublicBtn" disabled>Go Public (IPO)</button>
+          <div id="publicCompanyStatus" class="hidden">
+            <p class="hint">📈 Public since Year <strong id="ipoYearDisplay"></strong> • Investor Confidence <strong id="investorConfidenceDisplay"></strong> • Shareholder Revolts <strong id="revoltCountDisplay"></strong></p>
+          </div>
+        </section>
+      </div>
+
+      <!-- ---------- MARKETING ---------- -->
+      <div class="tab-panel" id="tab-marketing">
+        <section class="panel">
+          <h2>📣 Marketing Department</h2>
+          <p class="hint">How Hype actually works: Marketing Budget and Star Power each drive about 40% of a picture's opening Hype score; your Tagline/Title's genre fit is worth the last 20%. Checking more Marketing Channels multiplies the final Hype by up to 1.1x — skip them all and you're capped at 0.7x.</p>
+          <div id="marketingCurrentStats"></div>
+        </section>
+      </div>
+
+      <!-- ---------- DISTRIBUTION ---------- -->
+      <div class="tab-panel" id="tab-distribution">
+        <section class="panel">
+          <h2>📺 Distribution Ledger</h2>
+          <p class="hint">Every streaming deal your studio has signed.</p>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Title</th><th>Platform</th><th>Window</th><th>Streaming Revenue</th></tr></thead>
+              <tbody id="distributionTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>📼 Long-Term Revenue</h2>
+          <p class="hint">Physical media, TV/airline/educational/library licensing, and franchise deals — every well-received picture earns a trickle for a while after release.</p>
+          <div id="passiveIncomeBody"></div>
+        </section>
+      </div>
+
+      <!-- ---------- COMPETITORS ---------- -->
+      <div class="tab-panel" id="tab-competitors">
+        <section class="panel" id="competitorsPanel">
+          <h2>🏢 Rival Studios <span class="sub">Live</span></h2>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Studio</th><th>Cash</th><th>Prestige</th><th>Films</th></tr></thead>
+              <tbody id="competitorsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>🕵️ Industry Intelligence</h2>
+          <p class="hint">What's actually working across the industry right now — use it when picking your next project.</p>
+          <div id="industryReportBody"></div>
+          <h3 class="finance-subhead">Studio Rumor Mill</h3>
+          <p class="hint">Unconfirmed word on what each rival is developing next. Take it with a grain of salt.</p>
+          <div id="studioRumorsBody" class="finance-deal-list"></div>
+        </section>
+      </div>
+
+      <!-- ---------- INTERNATIONAL (locked) ---------- -->
+      <div class="tab-panel" id="tab-international">
+        <section class="panel locked-department">
+          <h2>🌍 International Distribution</h2>
+          <div class="locked-banner" id="internationalLockedBanner">🔒 Locked</div>
+          <p class="hint">Unlocks at 40 Prestige. Once open, you'll localize, dub, and release your pictures across North America, Europe, Latin America, Japan, China, India, Australia, and the Middle East — each with its own costs, censorship risk, and genre appetite.</p>
+        </section>
+      </div>
+
+      <!-- ---------- RESEARCH ---------- -->
+      <div class="tab-panel" id="tab-research">
+        <section class="panel" id="researchPanel">
+          <h2>📈 Industry Research</h2>
+          <div class="locked-banner" id="researchLockedBanner">🔒 Locked</div>
+          <p class="hint" id="researchLockedHint">Unlocks after 3 releases. Once open, you'll get genre demand reports that shift year to year — a chance to get ahead of trends instead of just reacting to them.</p>
+          <div id="researchContent" class="hidden">
+            <p class="hint">Demand shifts every year. Saturation reflects how many similar pictures have released recently — a hot genre that's already crowded is a trap, not an opportunity.</p>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Genre</th><th>Demand</th><th>Trend</th><th>Saturation</th><th>Read</th></tr></thead>
+                <tbody id="genreDemandTableBody"></tbody>
+              </table>
+            </div>
+            <h3 class="finance-subhead">Year in Review</h3>
+            <p class="hint" id="yearInReviewText"></p>
+          </div>
+        </section>
+      </div>
+
+      <!-- ---------- HISTORY ---------- -->
+      <div class="tab-panel" id="tab-history">
+        <section class="panel" id="historyPanel">
+          <h2>📊 Studio Filmography</h2>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Title</th><th>Genre</th><th>Released</th><th>Quality</th><th>Critics</th><th>Audience</th><th>Reception</th><th>Budget</th><th>Revenue</th><th>Profit</th><th>Verdict</th></tr></thead>
+              <tbody id="historyTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ---------- AWARDS ---------- -->
+      <div class="tab-panel" id="tab-awards">
+        <section class="panel">
+          <h2>🏆 For Your Consideration</h2>
+          <p class="hint" id="awardsCampaignGateHint">Unlocks when you win your first award. Spend on a campaign for one of this year's releases before the ceremony to nudge its odds.</p>
+          <div id="awardsCampaignList" class="hidden"></div>
+        </section>
+        <section class="panel">
+          <h2>🏆 Trophy Case</h2>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Year</th><th>Category</th><th>Picture</th><th>Recipient</th></tr></thead>
+              <tbody id="awardsHistoryTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ---------- STUDIO ---------- -->
+      <div class="tab-panel" id="tab-studio">
+        <section class="panel">
+          <h2>🏛 Studio Departments</h2>
+          <p class="hint">Departments unlock as your studio grows. Locked ones show what it takes to open their doors.</p>
+          <div id="departmentsGrid" class="departments-grid"></div>
+        </section>
+        <section class="panel">
+          <h2>📋 Studio Bio</h2>
+          <div id="studioBioBody"></div>
+        </section>
+      </div>
+
+      <!-- ---------- FRANCHISES ---------- -->
+      <div class="tab-panel" id="tab-franchises">
+        <section class="panel">
+          <h2>🎞 Franchise-Eligible Properties</h2>
+          <p class="hint">Any release with an ROI of 0.5 or better, or a Franchise Potential of 65 or higher from Script Development, can spawn a franchise. Franchise Value grows with each successful extension.</p>
+          <div id="franchiseList"></div>
+        </section>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===================== STUDIO CREATION MODAL (shown on load, not dismissible) ===================== -->
+<div class="modal-overlay" id="studioCreationModal">
+  <div class="modal-box awards-modal" style="max-width:640px;">
+    <h3>🎬 Found Your Studio</h3>
+    <div class="awards-sub">Marquee &amp; Ledger — Trade Daily</div>
+    <label for="newStudioNameInput" style="color:var(--ink-dim);">Studio Name</label>
+    <input type="text" id="newStudioNameInput" placeholder="e.g. Lighthouse Pictures" maxlength="30">
+    <label style="color:var(--ink-dim);">Choose Your Starting Tier</label>
+    <div id="tierOptionsList"></div>
+    <button class="btn-primary" id="foundStudioBtn">Found Studio</button>
+    <div id="continueSaveRow" class="hidden" style="margin-top:14px;text-align:center;">
+      <p class="hint">A previous studio was found on this device.</p>
+      <button class="btn-secondary" id="continueSavedGameBtn" style="width:100%;">▶ Continue Saved Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== GREENLIGHT REVIEW MODAL ===================== -->
+<div class="modal-overlay hidden" id="greenlightModal">
+  <div class="modal-box awards-modal" style="max-width:600px;">
+    <h3>🟢 Executive Greenlight Review</h3>
+    <div id="greenlightBody"></div>
+    <div class="greenlight-actions">
+      <button type="button" class="btn-primary" id="greenlightConfirmBtn">✅ Greenlight</button>
+      <button type="button" class="btn-secondary" id="greenlightDelayBtn">🗓 Delay 4 Weeks</button>
+      <button type="button" class="btn-secondary" id="greenlightRewriteBtn">✏️ Send Back for Rewrite</button>
+      <button type="button" class="btn-secondary" id="greenlightReduceScopeBtn">📉 Reduce Scope</button>
+      <button type="button" class="btn-secondary" id="greenlightIncreaseBudgetBtn">📈 Increase Budget</button>
+      <button type="button" class="btn-secondary" id="greenlightCancelBtn">✖ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== POST-PRODUCTION MODAL ===================== -->
+<div class="modal-overlay hidden" id="postProductionModal">
+  <div class="modal-box awards-modal" style="max-width:600px;">
+    <h3>🎞 Post-Production</h3>
+    <p class="hint" id="postProductionIntro"></p>
+    <div id="postProductionTierList"></div>
+  </div>
+</div>
+
+<!-- ===================== PRODUCTION EVENT MODAL ===================== -->
+<div class="modal-overlay hidden" id="eventModal">
+  <div class="modal-box event-modal">
+    <h3 id="eventTitle">⚡ Production Event</h3>
+    <div id="eventBody"></div>
+  </div>
+</div>
+
+<!-- ===================== TEST SCREENING MODAL ===================== -->
+<div class="modal-overlay hidden" id="testScreeningModal">
+  <div class="modal-box awards-modal" style="max-width:600px;">
+    <h3>🎦 Test Screening Results</h3>
+    <div class="awards-sub">A focus group previews your rough cut.</div>
+    <div id="testScreeningScores"></div>
+    <div id="testScreeningSuggestion" class="hint" style="text-align:center;margin:10px 0;"></div>
+    <div id="testScreeningChoices"></div>
+  </div>
+</div>
+
+<!-- ===================== INTERNATIONAL DISTRIBUTION MODAL ===================== -->
+<div class="modal-overlay hidden" id="internationalModal">
+  <div class="modal-box receipt-modal" style="max-width:640px;">
+    <h3>🌍 International Distribution</h3>
+    <div class="receipt-sub" id="internationalSummaryLine"></div>
+    <div id="internationalMarketsList"></div>
+    <p class="hint" id="intlTotalCostDisplay" style="font-weight:700;margin-top:10px;"></p>
+    <button class="btn-primary" id="confirmInternationalBtn">Confirm International Release</button>
+    <button class="btn-secondary" id="skipInternationalBtn" style="width:100%;margin-top:8px;">Skip — Domestic Only</button>
+  </div>
+</div>
+
+<!-- ===================== STREAMING DISTRIBUTION MODAL ===================== -->
+<div class="modal-overlay hidden" id="streamingModal">
+  <div class="modal-box receipt-modal">
+    <h3>📺 Post-Theatrical Distribution</h3>
+    <div class="receipt-sub" id="streamingTheatricalSummary"></div>
+
+    <label for="streamingPlatformSelect">Platform</label>
+    <select id="streamingPlatformSelect">
+      <option value="netflix">NetFlix — Flat Licensing Fee</option>
+      <option value="prime">Prime Video — Per-View Royalty Engine</option>
+      <option value="cultstream">CultStream — Niche Platform</option>
+    </select>
+
+    <label for="streamingWindowSelect">Release Window</label>
+    <select id="streamingWindowSelect">
+      <option value="immediate">Immediate (0-week delay) — +20% streaming cash, -50% prestige gain</option>
+      <option value="delayed" selected>Delayed (4-week window) — standard payout &amp; prestige</option>
+    </select>
+
+    <p id="platformDescription" class="hint"></p>
+    <span id="streamingPreviewAmount"></span>
+
+    <button class="btn-primary" id="finalizeStreamingBtn">Finalize Distribution Deal</button>
+  </div>
+</div>
+
+<!-- ===================== SUMMARY MODAL ===================== -->
+<div class="modal-overlay hidden" id="summaryModal">
+  <div class="modal-box receipt-modal">
+    <h3 id="summaryTitle">Box Office Receipt</h3>
+    <div class="receipt-sub">Final settlement — thank you for your business.</div>
+    <div id="summaryBody"></div>
+    <div class="modal-close-row">
+      <button class="btn-close-modal" id="summaryCloseBtn">Back to the Lot</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== AWARDS MODAL ===================== -->
+<div class="modal-overlay hidden" id="awardsModal">
+  <div class="modal-box awards-modal">
+    <h3>🏆 Annual Awards</h3>
+    <div class="awards-sub" id="awardsYearLabel">Year 1 Wrap Party</div>
+    <div id="awardsBody"></div>
+    <div class="modal-close-row">
+      <button class="btn-close-modal" id="awardsCloseBtn">Continue</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+
+</body>
+</html>
