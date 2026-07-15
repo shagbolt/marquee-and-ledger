@@ -6,8 +6,9 @@ import { advanceBackgroundSim } from './systems/ai-studios.js';
 import { maybeShowNextAward } from './systems/awards.js';
 import { goPublic, investorTerms, loanInterestRate, takeLoan, takeProfitShareDeal, yearOf } from './systems/market.js';
 import { REWRITE_OPTIONS, analyzeSynopsis, scaledCost } from './systems/release-strategy.js';
-import { analyzeScriptBtn, awardsCloseBtn, awardsModal, chBillboards, chOnline, chTV, chTrailers, clearScriptBtn, composerSelect, confirmInternationalBtn, continueSaveRow, continueSavedGameBtn, demographicSelect, directorSelect, exportSaveBtn, fastForwardBtn, festivalSelect, filmingFastForwardBtn, finalizeStreamingBtn, foundStudioBtn, genreSelect, goPublicBtn, greenlightCancelBtn, greenlightConfirmBtn, greenlightDelayBtn, greenlightIncreaseBudgetBtn, greenlightModal, greenlightReduceScopeBtn, greenlightRewriteBtn, importFileInput, importSaveBtn, loadGameBtn, loanAmountRange, loanAmountValue, marketingRange, movieTaglineInput, movieTitleInput, newStudioNameInput, nowShowingContent, nowShowingPlaceholder, producerSelect, ratingSelect, releaseBtn, resetBtn, rewriteOptionsList, runtimeRange, saveGameBtn, scheduleRange, sfxRange, skipInternationalBtn, skipWeeksBtn, skipWeeksSelect, skipYearBtn, star1Select, star2Select, strategySelect, streamingPlatformSelect, streamingWindowSelect, studioCreationModal, studioNameInput, summaryCloseBtn, summaryModal, synopsisInput, synopsisWordCount, tabBtns, tabPanels, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, themeToggleBtn, tierOptionsList, writerSelect } from './ui/dom-refs.js';
+import { analyzeScriptBtn, awardsCloseBtn, awardsModal, backToLaunchChoiceBtn, chBillboards, chOnline, chTV, chTrailers, clearScriptBtn, composerSelect, confirmInternationalBtn, continueSavedGameBtn, demographicSelect, directorSelect, exportSaveBtn, fastForwardBtn, festivalSelect, filmingFastForwardBtn, finalizeStreamingBtn, foundStudioBtn, genreSelect, goPublicBtn, greenlightCancelBtn, greenlightConfirmBtn, greenlightDelayBtn, greenlightIncreaseBudgetBtn, greenlightModal, greenlightReduceScopeBtn, greenlightRewriteBtn, importFileInput, importSaveBtn, launchChoicePanel, loadGameBtn, loanAmountRange, loanAmountValue, marketingRange, movieTaglineInput, movieTitleInput, newStudioFormPanel, newStudioNameInput, nowShowingContent, nowShowingPlaceholder, producerSelect, ratingSelect, releaseBtn, resetBtn, rewriteOptionsList, runtimeRange, saveGameBtn, scheduleRange, sfxRange, showNewStudioFormBtn, skipInternationalBtn, skipWeeksBtn, skipWeeksSelect, skipYearBtn, star1Select, star2Select, strategySelect, streamingPlatformSelect, streamingWindowSelect, studioCreationModal, studioNameInput, summaryCloseBtn, summaryModal, synopsisInput, synopsisWordCount, tabBtns, tabPanels, takeEquityBtn, takeInvestorBtn, takeLoanBtn, talentRoleFilter, talentSortBy, theaterRange, themeToggleBtn, tierOptionsList, writerSelect } from './ui/dom-refs.js';
 import { addNews, populateTalentSelects, renderAll, renderBudgetSummary, renderScriptReport } from './ui/render.js';
+import { renderTalentTab } from './ui/talent-tab.js';
 
 tabBtns.forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -203,7 +204,9 @@ export function beginStudioCreationScreen(){
     renderTierOptions();
     var hasSave = false;
     try{ hasSave = !!localStorage.getItem(SAVE_KEY); }catch(e){ hasSave = false; }
-    continueSaveRow.classList.toggle('hidden', !hasSave);
+    launchChoicePanel.classList.toggle('hidden', !hasSave);
+    newStudioFormPanel.classList.toggle('hidden', hasSave);
+    backToLaunchChoiceBtn.classList.toggle('hidden', !hasSave);
   }
 
 export function applyStarterDefaults(){
@@ -222,6 +225,19 @@ export function applyStarterDefaults(){
     setDefaultSelect(star1Select, 's7');
     setDefaultSelect(star2Select, 's11');
   }
+
+talentRoleFilter.addEventListener('change', renderTalentTab);
+talentSortBy.addEventListener('change', renderTalentTab);
+
+showNewStudioFormBtn.addEventListener('click', function(){
+    launchChoicePanel.classList.add('hidden');
+    newStudioFormPanel.classList.remove('hidden');
+  });
+
+backToLaunchChoiceBtn.addEventListener('click', function(){
+    newStudioFormPanel.classList.add('hidden');
+    launchChoicePanel.classList.remove('hidden');
+  });
 
 foundStudioBtn.addEventListener('click', function(){
     var chosen = document.querySelector('input[name="tierChoice"]:checked');

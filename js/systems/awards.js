@@ -48,8 +48,16 @@ export function computeAwards(year){
     addStudioPrestige(bestPictureMovie, 15, '🏆 Best Picture — '+bestPictureMovie.title);
     addStudioPrestige(bestDirector.movie, 8, '🎬 Best Director — '+bestDirector.movie.title);
     addStudioPrestige(bestActor.movie, 8, '⭐ Best Actor — '+bestActor.movie.title);
-    if(bestDirector.talentRef) bestDirector.talentRef.prestige = clamp(bestDirector.talentRef.prestige+10, 0, 100);
-    if(bestActor.talentRef) bestActor.talentRef.prestige = clamp(bestActor.talentRef.prestige+10, 0, 100);
+    if(bestDirector.talentRef){
+      bestDirector.talentRef.prestige = clamp(bestDirector.talentRef.prestige+10, 0, 100);
+      bestDirector.talentRef.awardsWon = bestDirector.talentRef.awardsWon || [];
+      bestDirector.talentRef.awardsWon.push({ year:year, category:'Best Director', movieTitle:bestDirector.movie.title });
+    }
+    if(bestActor.talentRef){
+      bestActor.talentRef.prestige = clamp(bestActor.talentRef.prestige+10, 0, 100);
+      bestActor.talentRef.awardsWon = bestActor.talentRef.awardsWon || [];
+      bestActor.talentRef.awardsWon.push({ year:year, category:'Best Actor', movieTitle:bestActor.movie.title });
+    }
 
     player.awardsWon = player.awardsWon || [];
     if(bestPictureMovie.ownerType==='player'){

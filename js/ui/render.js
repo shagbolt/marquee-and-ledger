@@ -6,6 +6,7 @@ import { buildYearInReviewText, computeIndustryReport, genreDemand, genreRecomme
 import { RELEASE_STRATEGIES, REWRITE_OPTIONS, checkTimingMatch, holidayName, isAwardsSeasonWeek, isSummerWeek, scaledCost } from '../systems/release-strategy.js';
 import { DEPARTMENTS, awardsCampaignEligibleMovies, awardsCampaignUnlocked, launchAwardsCampaign } from '../systems/studio-management.js';
 import { computeHype, computeQuality, prestigeTier } from '../systems/talent-quality.js';
+import { renderTalentTab } from './talent-tab.js';
 import { activeLoansList, awardsCampaignGateHint, awardsCampaignList, awardsHistoryTableBody, budgetSummaryBody, calendarPreview, cashDisplay, competitorsTableBody, composerSelect, demographicSelect, departmentsGrid, directorSelect, greenlightBody, greenlightModal, distributionTableBody, equityGateHint, festivalDescText, festivalSelect, formWarning, franchiseList, genreDemandTableBody, genreSelect, goPublicBtn, historyTableBody, industryReportBody, internationalLockedBanner, investorConfidenceDisplay, investorTermsDisplay, ipoGateHint, ipoYearDisplay, loanAmountRange, loanAmountValue, loanMaxDisplay, loanRateDisplay, marketingCurrentStats, marketingRange, marketingValue, movieTitleInput, newsFeedList, passiveIncomeBody, preprodPanel, prestigeBarFill, producerSelect, prestigeDisplay, prestigeHistoryList, prestigeMeterPointer, prestigeMeterValue, prestigeTierLabel, profitShareDealsList, propertyFitText, publicCompanyStatus, rankDisplay, ratingSelect, releaseBtn, researchContent, researchLockedBanner, researchLockedHint, revoltCountDisplay, rewriteOptionsList, runtimeRange, runtimeValueText, scheduleRange, scheduleValueText, scriptDevPanel, scriptReportBlock, scriptReportBody, sfxRange, sfxValue, slotReportBody, star1Select, star2Select, strategyDescText, strategySelect, studioBioBody, studioDataPanel, studioNameInput, studioRumorsBody, studioTierLine, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, theaterValue, timeControls, weekYearDisplay, writerSelect, yearInReviewText } from './dom-refs.js';
 
 export function renderHeader(){
@@ -563,6 +564,7 @@ export function renderAll(){
     renderDepartmentsGrid();
     renderStudioBio();
     renderFranchisesTab();
+    renderTalentTab();
     renderScriptReport();
   }
 

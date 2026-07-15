@@ -24,7 +24,10 @@ export var tierOptionsList = $('tierOptionsList');
 
 export var foundStudioBtn = $('foundStudioBtn');
 
-export var continueSaveRow = $('continueSaveRow');
+export var launchChoicePanel = $('launchChoicePanel');
+export var newStudioFormPanel = $('newStudioFormPanel');
+export var showNewStudioFormBtn = $('showNewStudioFormBtn');
+export var backToLaunchChoiceBtn = $('backToLaunchChoiceBtn');
 
 export var continueSavedGameBtn = $('continueSavedGameBtn');
 
@@ -115,6 +118,9 @@ export var departmentsGrid = $('departmentsGrid');
 export var studioBioBody = $('studioBioBody');
 
 export var franchiseList = $('franchiseList');
+export var talentRoleFilter = $('talentRoleFilter');
+export var talentSortBy = $('talentSortBy');
+export var talentRosterList = $('talentRosterList');
 
 export var prestigeMeterValue = $('prestigeMeterValue');
 

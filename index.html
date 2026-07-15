@@ -159,6 +159,7 @@
         <button class="tab-btn" data-tab="awards">🏆 Awards</button>
         <button class="tab-btn" data-tab="studio">🏛 Studio</button>
         <button class="tab-btn" data-tab="franchises">🎞 Franchises</button>
+        <button class="tab-btn" data-tab="talent">🎭 Talent</button>
       </nav>
 
       <!-- ---------- DASHBOARD ---------- -->
@@ -523,6 +524,37 @@
         </section>
       </div>
 
+      <!-- ---------- TALENT ---------- -->
+      <div class="tab-panel" id="tab-talent">
+        <section class="panel">
+          <h2>🎭 Talent Roster</h2>
+          <p class="hint">Everyone you can hire, and how their career is going. Fees move with prestige, which moves with every picture they're credited on.</p>
+          <div class="two-col" style="margin-bottom:12px;">
+            <div>
+              <label for="talentRoleFilter">Role</label>
+              <select id="talentRoleFilter">
+                <option value="all">All Roles</option>
+                <option value="writer">Writers</option>
+                <option value="director">Directors</option>
+                <option value="producer">Producers</option>
+                <option value="composer">Composers</option>
+                <option value="star">Stars</option>
+              </select>
+            </div>
+            <div>
+              <label for="talentSortBy">Sort By</label>
+              <select id="talentSortBy">
+                <option value="prestige">Prestige (High to Low)</option>
+                <option value="fee">Fee (High to Low)</option>
+                <option value="name">Name (A–Z)</option>
+                <option value="credits">Most Credits</option>
+              </select>
+            </div>
+          </div>
+          <div id="talentRosterList"></div>
+        </section>
+      </div>
+
     </main>
   </div>
 </div>
@@ -530,17 +562,26 @@
 <!-- ===================== STUDIO CREATION MODAL (shown on load, not dismissible) ===================== -->
 <div class="modal-overlay" id="studioCreationModal">
   <div class="modal-box awards-modal" style="max-width:640px;">
-    <h3>🎬 Found Your Studio</h3>
-    <div class="awards-sub">Marquee &amp; Ledger — Trade Daily</div>
-    <label for="newStudioNameInput" style="color:var(--ink-dim);">Studio Name</label>
-    <input type="text" id="newStudioNameInput" placeholder="e.g. Lighthouse Pictures" maxlength="30">
-    <label style="color:var(--ink-dim);">Choose Your Starting Tier</label>
-    <div id="tierOptionsList"></div>
-    <button class="btn-primary" id="foundStudioBtn">Found Studio</button>
-    <div id="continueSaveRow" class="hidden" style="margin-top:14px;text-align:center;">
-      <p class="hint">A previous studio was found on this device.</p>
-      <button class="btn-secondary" id="continueSavedGameBtn" style="width:100%;">▶ Continue Saved Game</button>
+
+    <div id="launchChoicePanel" class="hidden">
+      <h3>🎬 Marquee &amp; Ledger</h3>
+      <div class="awards-sub">Trade Daily — Welcome back to the lot</div>
+      <p class="hint" style="text-align:center;margin:14px 0;">A studio was found on this device. Pick up where you left off, or start something new.</p>
+      <button class="btn-primary" id="continueSavedGameBtn" style="width:100%;margin-bottom:10px;">▶ Continue Saved Studio</button>
+      <button class="btn-secondary" id="showNewStudioFormBtn" style="width:100%;">🎬 Found a New Studio</button>
     </div>
+
+    <div id="newStudioFormPanel">
+      <h3>🎬 Found Your Studio</h3>
+      <div class="awards-sub">Marquee &amp; Ledger — Trade Daily</div>
+      <label for="newStudioNameInput" style="color:var(--ink-dim);">Studio Name</label>
+      <input type="text" id="newStudioNameInput" placeholder="e.g. Lighthouse Pictures" maxlength="30">
+      <label style="color:var(--ink-dim);">Choose Your Starting Tier</label>
+      <div id="tierOptionsList"></div>
+      <button class="btn-primary" id="foundStudioBtn">Found Studio</button>
+      <button class="btn-secondary hidden" id="backToLaunchChoiceBtn" style="width:100%;margin-top:8px;">← Back</button>
+    </div>
+
   </div>
 </div>
 
