@@ -7,6 +7,7 @@ import { RELEASE_STRATEGIES, REWRITE_OPTIONS, checkTimingMatch, holidayName, isA
 import { DEPARTMENTS, awardsCampaignEligibleMovies, awardsCampaignUnlocked, launchAwardsCampaign } from '../systems/studio-management.js';
 import { computeHype, computeQuality, prestigeTier } from '../systems/talent-quality.js';
 import { renderTalentTab } from './talent-tab.js';
+import { renderObjectiveCard } from './objective.js';
 import { activeLoansList, awardsCampaignGateHint, awardsCampaignList, awardsHistoryTableBody, budgetSummaryBody, calendarPreview, cashDisplay, competitorsTableBody, composerSelect, demographicSelect, departmentsGrid, directorSelect, greenlightBody, greenlightModal, distributionTableBody, equityGateHint, festivalDescText, festivalSelect, formWarning, franchiseList, genreDemandTableBody, genreSelect, goPublicBtn, historyTableBody, industryReportBody, internationalLockedBanner, investorConfidenceDisplay, investorTermsDisplay, ipoGateHint, ipoYearDisplay, loanAmountRange, loanAmountValue, loanMaxDisplay, loanRateDisplay, marketingCurrentStats, marketingRange, marketingValue, movieTitleInput, newsFeedList, passiveIncomeBody, preprodPanel, prestigeBarFill, producerSelect, prestigeDisplay, prestigeHistoryList, prestigeMeterPointer, prestigeMeterValue, prestigeTierLabel, profitShareDealsList, propertyFitText, publicCompanyStatus, rankDisplay, ratingSelect, releaseBtn, researchContent, researchLockedBanner, researchLockedHint, revoltCountDisplay, rewriteOptionsList, runtimeRange, runtimeValueText, scheduleRange, scheduleValueText, scriptDevPanel, scriptReportBlock, scriptReportBody, sfxRange, sfxValue, slotReportBody, star1Select, star2Select, strategyDescText, strategySelect, studioBioBody, studioDataPanel, studioNameInput, studioRumorsBody, studioTierLine, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, theaterValue, timeControls, weekYearDisplay, writerSelect, yearInReviewText } from './dom-refs.js';
 
 export function renderHeader(){
@@ -208,7 +209,9 @@ export function renderBudgetSummary(){
     releaseBtn.disabled = blocking || !!game.currentRun;
   }
 
-export function renderGreenlightReview(){
+// Shared by the Greenlight review modal and the wizard's live movie-card preview, so
+// both always agree — one calculation, two presentations.
+export function computeGreenlightPreview(){
     var sel = getSelectedTalent();
     var sfx = Number(sfxRange.value);
     var mkt = Number(marketingRange.value);
@@ -235,19 +238,27 @@ export function renderGreenlightReview(){
 
     var cashAfter = player.cash-total;
     var cashFraction = player.cash>0 ? total/player.cash : 2;
+    var riskPct = clamp(cashFraction*100, 4, 100);
     var risk, riskCls;
     if(cashAfter<0){ risk = 'HIGH RISK — pushes the studio into debt'; riskCls = 'risk-high'; }
     else if(cashFraction>0.8){ risk = 'HIGH RISK — most of your cash on one picture'; riskCls = 'risk-high'; }
     else if(cashFraction>0.4){ risk = 'MODERATE RISK — a meaningful bet'; riskCls = 'risk-moderate'; }
     else { risk = 'LOW RISK — comfortably within budget'; riskCls = 'risk-low'; }
 
+    return { sel:sel, sfx:sfx, mkt:mkt, genre:genre, theaters:theaters, total:total, discountAmt:discountAmt,
+      qEst:qEst, hEst:hEst, lowRevenue:lowRevenue, highRevenue:highRevenue,
+      cashAfter:cashAfter, risk:risk, riskCls:riskCls, riskPct:riskPct };
+  }
+
+export function renderGreenlightReview(){
+    var p = computeGreenlightPreview();
     greenlightBody.innerHTML =
-      '<div class="greenlight-line"><span>Estimated Quality</span><span>'+qEst+' / 100</span></div>'+
-      '<div class="greenlight-line"><span>Estimated Hype</span><span>'+hEst+' / 100</span></div>'+
-      '<div class="greenlight-line"><span>Projected Studio Revenue</span><span>'+formatMoney(lowRevenue)+' – '+formatMoney(highRevenue)+'</span></div>'+
-      '<div class="greenlight-line total"><span>Total Budget</span><span>'+formatMoney(total)+'</span></div>'+
-      '<div class="greenlight-line"><span>Cash After Greenlight</span><span style="color:'+(cashAfter<0?'var(--crimson)':'var(--emerald)')+'">'+formatMoney(cashAfter)+'</span></div>'+
-      '<div class="greenlight-risk '+riskCls+'">'+risk+'</div>'+
+      '<div class="greenlight-line"><span>Estimated Quality</span><span>'+p.qEst+' / 100</span></div>'+
+      '<div class="greenlight-line"><span>Estimated Hype</span><span>'+p.hEst+' / 100</span></div>'+
+      '<div class="greenlight-line"><span>Projected Studio Revenue</span><span>'+formatMoney(p.lowRevenue)+' – '+formatMoney(p.highRevenue)+'</span></div>'+
+      '<div class="greenlight-line total"><span>Total Budget</span><span>'+formatMoney(p.total)+'</span></div>'+
+      '<div class="greenlight-line"><span>Cash After Greenlight</span><span style="color:'+(p.cashAfter<0?'var(--crimson)':'var(--emerald)')+'">'+formatMoney(p.cashAfter)+'</span></div>'+
+      '<div class="greenlight-risk '+p.riskCls+'">'+p.risk+'</div>'+
       '<p class="hint" style="margin-top:8px;">Estimates use the same formulas as the real production, without the randomness a Production Event or Test Screening can still add either way.</p>';
   }
 
@@ -565,6 +576,7 @@ export function renderAll(){
     renderStudioBio();
     renderFranchisesTab();
     renderTalentTab();
+    renderObjectiveCard();
     renderScriptReport();
   }
 

@@ -12,6 +12,8 @@ import { RELEASE_STRATEGIES, TEST_SCREENING_CHOICES, applyTestScreeningChoice, c
 import { buildReviewSummary, checkBreakoutEligibility, computeHype, computeQuality, computeReviews, pickBreakoutTalent } from '../systems/talent-quality.js';
 import { $, audienceBlurbText, audienceScoreDisplay, chBillboards, chOnline, chTV, chTrailers, criticsBlurbText, criticsScoreDisplay, cumulativeBig, demographicSelect, divergenceTag, eventBody, eventModal, eventTitle, festivalSelect, filmingMeta, filmingMoraleDisplay, filmingPanel, filmingSpendDisplay, filmingTickerBody, filmingTitle, filmingWeekDisplay, genreSelect, greenlightModal, marketingRange, movieTaglineInput, movieTitleInput, nowShowingContent, nowShowingMeta, nowShowingPlaceholder, nowShowingTitle, postProductionIntro, postProductionModal, postProductionTierList, ratingSelect, runtimeRange, scheduleRange, sfxRange, strategySelect, testScreeningChoices, testScreeningModal, testScreeningScores, testScreeningSuggestion, theaterRange, theatersNowDisplay, tickerTableBody, weeksElapsedDisplay } from '../ui/dom-refs.js';
 import { addNews, getSelectedTalent, populateTalentSelects, renderAll, renderCompetitors, renderGreenlightReview, renderHeader, renderNews, renderSlotReport, setFormDisabled } from '../ui/render.js';
+import { renderObjectiveCard } from '../ui/objective.js';
+import { goToStep } from '../ui/wizard.js';
 
 export function openGreenlightReview(){
     var sel = getSelectedTalent();
@@ -20,11 +22,13 @@ export function openGreenlightReview(){
     if(!movieTitleInput.value.trim()){ alert('Give your picture a title before requesting a greenlight review.'); return; }
     renderGreenlightReview();
     greenlightModal.classList.remove('hidden');
+    renderObjectiveCard();
   }
 
 export function confirmGreenlight(){
     var sel = getSelectedTalent();
     greenlightModal.classList.add('hidden');
+    renderObjectiveCard();
 
     var title = movieTitleInput.value.trim() || 'Untitled Picture';
     var tagline = movieTaglineInput.value.trim();
@@ -84,6 +88,7 @@ export function confirmGreenlight(){
     };
     game.currentScript = null;
     game.pendingFranchiseLink = null;
+    goToStep(1);
 
     renderAll();
     setFormDisabled(true);
@@ -95,11 +100,13 @@ export function confirmGreenlight(){
 // back to it so the player can review before requesting another greenlight.
 export function greenlightDelay(){
     greenlightModal.classList.add('hidden');
+    renderObjectiveCard();
     scheduleRange.value = Math.min(52, Number(scheduleRange.value)+4);
     scheduleRange.dispatchEvent(new Event('input', {bubbles:true}));
   }
 export function greenlightReduceScope(){
     greenlightModal.classList.add('hidden');
+    renderObjectiveCard();
     sfxRange.value = Math.round(Number(sfxRange.value)*0.8/250000)*250000;
     marketingRange.value = Math.round(Number(marketingRange.value)*0.8/250000)*250000;
     sfxRange.dispatchEvent(new Event('input', {bubbles:true}));
@@ -107,6 +114,7 @@ export function greenlightReduceScope(){
   }
 export function greenlightIncreaseBudget(){
     greenlightModal.classList.add('hidden');
+    renderObjectiveCard();
     sfxRange.value = Math.min(60000000, Math.round(Number(sfxRange.value)*1.2/250000)*250000);
     marketingRange.value = Math.min(60000000, Math.round(Number(marketingRange.value)*1.2/250000)*250000);
     sfxRange.dispatchEvent(new Event('input', {bubbles:true}));
@@ -114,6 +122,7 @@ export function greenlightIncreaseBudget(){
   }
 export function greenlightCancel(){
     greenlightModal.classList.add('hidden');
+    renderObjectiveCard();
   }
 
 export function openProductionEvent(movie){
@@ -151,6 +160,7 @@ export function openProductionEvent(movie){
       });
     });
     eventModal.classList.remove('hidden');
+    renderObjectiveCard();
   }
 
 export function showEventOutcome(outcome, movie){
@@ -158,6 +168,7 @@ export function showEventOutcome(outcome, movie){
       '<button type="button" class="btn-primary" id="eventContinueBtn">Continue to Production</button>';
     $('eventContinueBtn').addEventListener('click', function(){
       eventModal.classList.add('hidden');
+      renderObjectiveCard();
       startProductionShoot(movie);
     });
   }
@@ -178,9 +189,8 @@ export function startProductionShoot(movie){
     filmingTickerBody.innerHTML = '';
     renderFilmingStats(movie, 0, movie.productionWeeks);
     setFormDisabled(true);
-    game.currentShoot = { movie: movie, weekIndex: 0, extraWeeks: 0, intervalId: null };
-    game.currentShoot.intervalId = setInterval(processShootWeek, 1000);
-    processShootWeek();
+    game.currentShoot = { movie: movie, weekIndex: 0, extraWeeks: 0 };
+    appendFilmingRow('—', 'Cameras are set. Click Advance Week to begin shooting.');
   }
 
 export function renderFilmingStats(movie, weekIndex, totalWeeks){
@@ -206,7 +216,6 @@ export function processShootWeek(){
 
     var totalPlanned = movie.productionWeeks+shoot.extraWeeks;
     if(Math.random()<0.32){
-      clearInterval(shoot.intervalId);
       openShootEvent(movie, shoot);
       return;
     }
@@ -214,7 +223,6 @@ export function processShootWeek(){
     renderFilmingStats(movie, shoot.weekIndex, totalPlanned);
 
     if(shoot.weekIndex>=totalPlanned){
-      clearInterval(shoot.intervalId);
       finishShoot(movie);
     }
   }
@@ -252,22 +260,21 @@ export function openShootEvent(movie, shoot){
         appendFilmingRow(shoot.weekIndex, evt.title+' — '+outcome);
         renderFilmingStats(movie, shoot.weekIndex, movie.productionWeeks+shoot.extraWeeks);
         eventModal.classList.add('hidden');
+        renderObjectiveCard();
 
         var totalPlanned = movie.productionWeeks+shoot.extraWeeks;
         if(shoot.weekIndex>=totalPlanned){
           finishShoot(movie);
-        } else {
-          shoot.intervalId = setInterval(processShootWeek, 1000);
         }
       });
     });
     eventModal.classList.remove('hidden');
+    renderObjectiveCard();
   }
 
 export function fastForwardShoot(){
     var shoot = game.currentShoot;
     if(!shoot) return;
-    if(shoot.intervalId){ clearInterval(shoot.intervalId); }
     var movie = shoot.movie;
     var guard = 0;
     while(game.currentShoot && guard<30){
@@ -332,6 +339,7 @@ export function openPostProductionReview(movie){
       });
     });
     postProductionModal.classList.remove('hidden');
+    renderObjectiveCard();
   }
 
 export function confirmPostProductionTier(movie, tier){
@@ -345,6 +353,7 @@ export function confirmPostProductionTier(movie, tier){
     movie.hypeDelta += tier.hypeDelta;
     movie.postProductionTier = tier.id;
     postProductionModal.classList.add('hidden');
+    renderObjectiveCard();
     addNews('🎞 Post-production on "'+escapeHtml(movie.title)+'" wraps: '+escapeHtml(tier.name)+'.');
     renderHeader();
 
@@ -387,12 +396,14 @@ export function openPostProductionEvent(movie){
           '<button type="button" class="btn-primary" id="eventContinueBtn">Continue to Test Screening</button>';
         $('eventContinueBtn').addEventListener('click', function(){
           eventModal.classList.add('hidden');
+          renderObjectiveCard();
           computeFilmMetrics(movie);
           openTestScreening(movie);
         });
       });
     });
     eventModal.classList.remove('hidden');
+    renderObjectiveCard();
   }
 
 export function computeFilmMetrics(movie){
@@ -492,6 +503,7 @@ export function openTestScreening(movie){
     movie.testScreening = feedback;
     renderTestScreeningModal(movie, feedback);
     testScreeningModal.classList.remove('hidden');
+    renderObjectiveCard();
   }
 
 export function renderTestScreeningModal(movie, feedback){
@@ -534,6 +546,7 @@ export function renderTestScreeningModal(movie, feedback){
         renderHeader();
         showTestScreeningOutcome(result.outcome, function(){
           testScreeningModal.classList.add('hidden');
+          renderObjectiveCard();
           if(choiceDef.delayWeeks>0){ advanceBackgroundSim(game.processedWeek+choiceDef.delayWeeks); }
           renderAll();
           proceedToRelease(movie);
@@ -596,7 +609,7 @@ export function startWeekByWeekRun(movie, slotCompetitors){
     nowShowingContent.classList.remove('hidden');
     nowShowingTitle.textContent = movie.title + (movie.tagline ? ' — "'+movie.tagline+'"' : '');
     renderNowShowingBadges(movie);
-    weeksElapsedDisplay.textContent = 'Week 0';
+    weeksElapsedDisplay.textContent = 'Not yet released';
     theatersNowDisplay.textContent = '0';
     cumulativeBig.textContent = '$0';
     criticsScoreDisplay.textContent = movie.criticsScore+'%';
@@ -613,10 +626,8 @@ export function startWeekByWeekRun(movie, slotCompetitors){
 
     game.currentRun = {
       movie: movie, slotCompetitors: slotCompetitors,
-      weekIndex: 0, cumulative: 0, prevWeekly: 0, prevTheaters: 0, intervalId: null
+      weekIndex: 0, cumulative: 0, prevWeekly: 0, prevTheaters: 0
     };
-    game.currentRun.intervalId = setInterval(processNextWeek, 1000);
-    processNextWeek();
   }
 
 export function appendTickerRow(row){
@@ -741,7 +752,6 @@ export function processNextWeek(){
     renderHeader();
 
     if(theaters===0 || run.weekIndex>=40){
-      clearInterval(run.intervalId);
       finishRun();
     }
   }

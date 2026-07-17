@@ -1,5 +1,5 @@
 import { STUDIO_TIERS, bumpUidCounter, clamp, composers, directors, findTier, producers, rand, setTalentRosters, stars, uidCounter, writers } from '../data/constants.js';
-import { freshGenreDemand, genreDemand, prevGenreDemand, recentReleases, resetGenreDemandForNewStudio, setGenreDemandFromSave } from '../systems/market.js';
+import { freshGenreDemand, genreDemand, prevGenreDemand, recentReleases, resetGenreDemandForNewStudio, setGenreDemandFromSave, yearOf } from '../systems/market.js';
 import { saveStatusLine, synopsisInput, synopsisWordCount } from '../ui/dom-refs.js';
 import { addNews, populateTalentSelects, renderAll } from '../ui/render.js';
 
@@ -74,7 +74,7 @@ export function serializeGame(){
       genreDemand: genreDemand,
       prevGenreDemand: prevGenreDemand,
       recentReleases: recentReleases,
-      game: { processedWeek: game.processedWeek, lastAwardedYear: game.lastAwardedYear, currentScript: game.currentScript, playerHeatGenre: game.playerHeatGenre, playerHeatWeeksRemaining: game.playerHeatWeeksRemaining, passiveIncomeQuarterStart: game.passiveIncomeQuarterStart },
+      game: { processedWeek: game.processedWeek, lastAwardedYear: game.lastAwardedYear, currentScript: game.currentScript, playerHeatGenre: game.playerHeatGenre, playerHeatWeeksRemaining: game.playerHeatWeeksRemaining, passiveIncomeQuarterStart: game.passiveIncomeQuarterStart, seasonGoal: game.seasonGoal, lastGoalYear: game.lastGoalYear },
       newsLog: newsLog,
       prestigeHistory: prestigeHistory,
       uidCounter: uidCounter
@@ -104,6 +104,8 @@ export function restoreGame(data){
     setGenreDemandFromSave(data.genreDemand || freshGenreDemand(), data.prevGenreDemand || {}, data.recentReleases || []);
     game.processedWeek = data.game.processedWeek;
     game.lastAwardedYear = data.game.lastAwardedYear;
+    game.seasonGoal = data.game.seasonGoal || null;
+    game.lastGoalYear = data.game.lastGoalYear!=null ? data.game.lastGoalYear : yearOf(game.processedWeek);
     game.currentRun = null;
     game.currentScript = data.game.currentScript || null;
     game.playerHeatGenre = data.game.playerHeatGenre || null;

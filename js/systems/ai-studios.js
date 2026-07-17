@@ -1,6 +1,7 @@
 import { clamp, escapeHtml, generateMovieTitle, pickAIName, rand, randInt, uid } from '../data/constants.js';
 import { aiStudios, chargeOverheadForWeek, currentTier, game, player } from '../state/game-state.js';
 import { checkAwards } from './awards.js';
+import { checkSeasonGoalYearEnd } from './season-goals.js';
 import { tickPassiveIncome } from './franchise.js';
 import { chargeLoanPaymentsForWeek, checkQuarterlyEarnings, computeIndustryReport, genreDemand, getSaturation, pickWeightedGenre, recordRelease, weekInYearOf, yearOf } from './market.js';
 import { applyPrestigeDelta, commercialPrestigeComponent, reviewPrestigeComponent, verdictInfo } from './talent-quality.js';
@@ -140,6 +141,7 @@ export function advanceOneWeek(){
     tickPlayerHeat();
     tickPassiveIncome();
     checkAwards();
+    checkSeasonGoalYearEnd();
   }
 export function advanceBackgroundSim(targetWeek){
     while(game.processedWeek < targetWeek){

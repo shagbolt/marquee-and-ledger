@@ -141,6 +141,20 @@ export var skipYearBtn = $('skipYearBtn');
 export var timeControls = $('timeControls');
 
 export var preprodPanel = $('preprodPanel');
+export var wizardSteps = $('wizardSteps');
+export var moviePoster = $('moviePoster');
+export var moviePosterTitle = $('moviePosterTitle');
+export var movieCardTitle = $('movieCardTitle');
+export var movieCardMeta = $('movieCardMeta');
+export var movieCardCast = $('movieCardCast');
+export var movieCardRiskLabel = $('movieCardRiskLabel');
+export var riskMarker = $('riskMarker');
+export var movieCardQH = $('movieCardQH');
+export var movieCardRows = $('movieCardRows');
+export var wizardStepDots = document.querySelectorAll('.wizard-step-dot');
+export var wizardStepPanels = document.querySelectorAll('.wizard-step-panel');
+export var wizardNextBtns = document.querySelectorAll('.wizard-next-btn');
+export var wizardBackBtns = document.querySelectorAll('.wizard-back-btn');
 
 export var scriptDevPanel = $('scriptDevPanel');
 
@@ -230,6 +244,17 @@ export var slotReportBody = $('slotReportBody');
 export var nowShowingPlaceholder = $('nowShowingPlaceholder');
 
 export var nowShowingContent = $('nowShowingContent');
+
+export var objectiveCard = $('objectiveCard');
+export var objectiveIcon = $('objectiveIcon');
+export var objectiveTitle = $('objectiveTitle');
+export var objectiveContext = $('objectiveContext');
+export var objectivePrimaryBtn = $('objectivePrimaryBtn');
+export var seasonGoalLabel = $('seasonGoalLabel');
+export var seasonGoalFill = $('seasonGoalFill');
+export var outcomeSummary = $('outcomeSummary');
+export var outcomeSummaryBody = $('outcomeSummaryBody');
+export var outcomeSummaryCloseBtn = $('outcomeSummaryCloseBtn');
 
 export var filmingPanel = $('filmingPanel');
 export var filmingTitle = $('filmingTitle');

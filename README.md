@@ -49,12 +49,17 @@ js/
     ai-studios.js            Rival studio behavior: genre picks, bankruptcy, mergers
     awards.js                Annual awards
     streaming.js              Streaming platform payouts
+    season-goals.js          One goal per game-year, tracked and evaluated on year turnover
   ui/
     dom-refs.js              Every DOM element lookup, in one place
     render.js                 All renderX() functions that paint state to the DOM
+    talent-tab.js             The Talent Roster tab: filter/sort over the existing rosters
+    objective.js               Derives current phase from existing state, renders the Objective Card
+    wizard.js                   Greenlight wizard step navigation and live movie-card preview
   flow/
     production-flow.js       Green-light → production event → quality/reviews computation
     release-flow.js           Theatrical run conclusion → international → streaming → receipt
+    turn-flow.js               advanceWeek() — the single dispatcher every phase's "next week" goes through
 ```
 
 ## What's new in this revision: Post-Production
@@ -105,6 +110,85 @@ Re-verified the balance-critical default-path test after this integration: 15/15
 trials, zero bombs — the shoot's morale effect, if anything, skews slightly positive
 overall (paying to solve problems is the fast-forward default), and didn't disturb the
 existing tuning.
+
+## What's new in this revision: Greenlight Journey Wizard (Priority 2)
+
+The single long Green-Light form is now a guided 5-step flow — Story → Team → Plan →
+Release → Review — with a persistent, live-updating movie card alongside it. Every
+existing field kept its exact ID and behavior; this was a pure regrouping, not a rebuild.
+
+- **`js/ui/wizard.js`** — step navigation (`goToStep`) and the movie card renderer
+  (`renderMovieCard`). The card shows a genre-tinted poster, cast initials for
+  writer/director/both leads, a continuous risk gauge (upgrading the old categorical
+  Low/Moderate/High badge to a gradient bar with a marker), Quality/Hype, and budget/
+  lead/release-window rows — all computed by the same `computeGreenlightPreview()` the
+  actual Greenlight review modal uses, extracted out of `renderGreenlightReview()` so
+  the two can never disagree.
+- **Step 5 doesn't duplicate the Greenlight review** — its button just calls the
+  existing `openGreenlightReview()`. The wizard gets you to the decision; the decision
+  itself is still the same tested modal from the previous revision.
+- The wizard resets to Step 1 automatically once a picture is actually greenlit, so the
+  next picture starts fresh.
+
+**If you're testing this with automation**: `releaseBtn` now lives inside Step 5's
+panel, which is hidden until you click through Steps 1–4 (or click the four
+`.wizard-next-btn` elements directly). A script that clicks `#releaseBtn` without
+navigating the wizard first will find it not visible.
+
+Verified: full navigation (forward, back, live card updates including watching the risk
+gauge react to a real budget change), confirmed Step 5's button opens the exact same
+Greenlight modal as before, confirmed the wizard resets correctly after a greenlight,
+the 20-release stress suite, and the balance-critical test at 30 trials — zero Bombs
+this pass.
+
+**Not yet built**: Priorities 3–5 (cinematic event-card redesign, tab consolidation,
+rival personalities and season finale) remain open.
+
+## What's new in this revision: Command-Center Dashboard (Priority 1)
+
+The biggest change in this revision: **time no longer advances on its own.** Every week,
+in every phase — filming, in theaters, or idle — only moves forward when the player
+clicks **Advance Week**, or Fast Forward loops that same click automatically. The old
+1-second auto-tick timers on both the Shoot and the Box Office ticker are gone.
+
+- **`js/ui/objective.js`** — derives "what's happening right now" from existing state
+  (no new state to keep in sync: reads `game.currentShoot`, `game.currentRun`, cash,
+  and whether a decision modal is open) and renders the Objective Card at the top of
+  the Dashboard: an icon, a one-line status, and a single primary action button that's
+  either Advance Week or "Go to Development," depending on phase.
+- **`js/flow/turn-flow.js`** — `advanceWeek()`, the single dispatcher every phase's
+  "next week" now goes through. It figures out which system owns the current week
+  (shoot, box office, or idle), runs exactly one week of it, and shows an Outcome
+  Summary (cash change, prestige change, up to 3 relevant news lines) after.
+- **`js/systems/season-goals.js`** — one goal per game-year (a prestige threshold, a
+  profit target, a release count, or beating a named rival's cash), tracked in
+  `game.seasonGoal`, evaluated and replaced automatically on year turnover via the same
+  shared weekly tick Awards already uses. Persists through save/load.
+- The Now Filming and Now Showing panels, and Fast Forward on both, are unchanged and
+  still there below the Objective Card — nothing was removed, only added on top.
+
+**A real bug worth knowing about if you touch this area:** the Objective Card's Advance
+Week button disables itself whenever a decision modal (Production Event, Shoot Event,
+Post-Production, Test Screening, Greenlight) is open, since there's nothing to advance
+past yet. Getting this right meant putting `renderObjectiveCard()` immediately after
+every single place one of those four modals shows or hides — not just "somewhere nearby"
+in the surrounding function, which is where the first attempt at this went wrong (the
+render landed a few lines before the modal actually closed, and the button stayed
+stuck disabled). If you add a new decision modal, follow the same pattern: call
+`renderObjectiveCard()` at the exact line the modal's hidden class toggles, not before
+or after other logic in the same function.
+
+Verified: a full playthrough clicking Advance Week through every phase (with explicit
+checks that waiting after a single click never produces a second, unrequested week), the
+full 20-release stress suite, and the balance-critical default-path test (30 trials this
+time given the stakes of touching the core loop — 1 Bomb, ~97% Break-even-or-better,
+consistent with intentional variance rather than the systemic failure the original
+balance fix addressed).
+
+**Not yet built** — Priorities 2 through 5 from the brief (the guided Greenlight wizard,
+cinematic event-card redesign, tab consolidation into four destinations, and rival
+personalities/season-finale recap) are still open, by design — the brief asked for
+Priority 1 only, one phase at a time.
 
 ## What's new in this revision: Producer & Greenlight
 

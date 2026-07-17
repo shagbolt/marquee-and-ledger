@@ -1,14 +1,17 @@
 import { STUDIO_TIERS, escapeHtml, findTier, formatMoney } from './data/constants.js';
 import { confirmGreenlight, fastForwardShoot, greenlightCancel, greenlightDelay, greenlightIncreaseBudget, greenlightReduceScope, openGreenlightReview, processNextWeek } from './flow/production-flow.js';
+import { advanceWeek } from './flow/turn-flow.js';
 import { finalizeInternational, finalizeStreamingDeal, skipInternational, updateStreamingPreview } from './flow/release-flow.js';
 import { SAVE_KEY, exportSaveFile, foundNewStudio, game, importSaveFile, loadGameFromLocalStorage, player, saveGameToLocalStorage } from './state/game-state.js';
 import { advanceBackgroundSim } from './systems/ai-studios.js';
 import { maybeShowNextAward } from './systems/awards.js';
+import { checkSeasonGoalYearEnd } from './systems/season-goals.js';
 import { goPublic, investorTerms, loanInterestRate, takeLoan, takeProfitShareDeal, yearOf } from './systems/market.js';
 import { REWRITE_OPTIONS, analyzeSynopsis, scaledCost } from './systems/release-strategy.js';
-import { analyzeScriptBtn, awardsCloseBtn, awardsModal, backToLaunchChoiceBtn, chBillboards, chOnline, chTV, chTrailers, clearScriptBtn, composerSelect, confirmInternationalBtn, continueSavedGameBtn, demographicSelect, directorSelect, exportSaveBtn, fastForwardBtn, festivalSelect, filmingFastForwardBtn, finalizeStreamingBtn, foundStudioBtn, genreSelect, goPublicBtn, greenlightCancelBtn, greenlightConfirmBtn, greenlightDelayBtn, greenlightIncreaseBudgetBtn, greenlightModal, greenlightReduceScopeBtn, greenlightRewriteBtn, importFileInput, importSaveBtn, launchChoicePanel, loadGameBtn, loanAmountRange, loanAmountValue, marketingRange, movieTaglineInput, movieTitleInput, newStudioFormPanel, newStudioNameInput, nowShowingContent, nowShowingPlaceholder, producerSelect, ratingSelect, releaseBtn, resetBtn, rewriteOptionsList, runtimeRange, saveGameBtn, scheduleRange, sfxRange, showNewStudioFormBtn, skipInternationalBtn, skipWeeksBtn, skipWeeksSelect, skipYearBtn, star1Select, star2Select, strategySelect, streamingPlatformSelect, streamingWindowSelect, studioCreationModal, studioNameInput, summaryCloseBtn, summaryModal, synopsisInput, synopsisWordCount, tabBtns, tabPanels, takeEquityBtn, takeInvestorBtn, takeLoanBtn, talentRoleFilter, talentSortBy, theaterRange, themeToggleBtn, tierOptionsList, writerSelect } from './ui/dom-refs.js';
+import { analyzeScriptBtn, awardsCloseBtn, awardsModal, backToLaunchChoiceBtn, chBillboards, chOnline, chTV, chTrailers, clearScriptBtn, composerSelect, confirmInternationalBtn, continueSavedGameBtn, demographicSelect, directorSelect, exportSaveBtn, fastForwardBtn, festivalSelect, filmingFastForwardBtn, finalizeStreamingBtn, foundStudioBtn, genreSelect, goPublicBtn, greenlightCancelBtn, greenlightConfirmBtn, greenlightDelayBtn, greenlightIncreaseBudgetBtn, greenlightModal, greenlightReduceScopeBtn, greenlightRewriteBtn, importFileInput, importSaveBtn, launchChoicePanel, loadGameBtn, loanAmountRange, loanAmountValue, marketingRange, movieTaglineInput, movieTitleInput, newStudioFormPanel, newStudioNameInput, nowShowingContent, nowShowingPlaceholder, objectivePrimaryBtn, outcomeSummary, outcomeSummaryCloseBtn, producerSelect, ratingSelect, releaseBtn, resetBtn, rewriteOptionsList, runtimeRange, saveGameBtn, scheduleRange, sfxRange, showNewStudioFormBtn, skipInternationalBtn, skipWeeksBtn, skipWeeksSelect, skipYearBtn, star1Select, star2Select, strategySelect, streamingPlatformSelect, streamingWindowSelect, studioCreationModal, studioNameInput, summaryCloseBtn, summaryModal, synopsisInput, synopsisWordCount, tabBtns, tabPanels, takeEquityBtn, takeInvestorBtn, takeLoanBtn, talentRoleFilter, talentSortBy, theaterRange, themeToggleBtn, tierOptionsList, wizardBackBtns, wizardNextBtns, writerSelect } from './ui/dom-refs.js';
 import { addNews, populateTalentSelects, renderAll, renderBudgetSummary, renderScriptReport } from './ui/render.js';
 import { renderTalentTab } from './ui/talent-tab.js';
+import { goToStep, renderMovieCard } from './ui/wizard.js';
 
 tabBtns.forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -17,6 +20,20 @@ tabBtns.forEach(function(btn){
       tabPanels.forEach(function(p){ p.classList.toggle('active', p.id==='tab-'+tabId); });
       renderAll();
     });
+  });
+
+objectivePrimaryBtn.addEventListener('click', function(){
+    var action = objectivePrimaryBtn.getAttribute('data-action');
+    if(action==='advance'){
+      advanceWeek();
+    } else {
+      var devTab = document.querySelector('.tab-btn[data-tab="development"]');
+      if(devTab) devTab.click();
+    }
+  });
+
+outcomeSummaryCloseBtn.addEventListener('click', function(){
+    outcomeSummary.classList.add('hidden');
   });
 
 synopsisInput.addEventListener('input', function(){
@@ -106,7 +123,15 @@ goPublicBtn.addEventListener('click', function(){
      strategySelect, scheduleRange, runtimeRange, ratingSelect, demographicSelect, festivalSelect,
      movieTitleInput, movieTaglineInput].forEach(function(el){
       el.addEventListener(evt, renderBudgetSummary);
+      el.addEventListener(evt, renderMovieCard);
     });
+  });
+
+wizardNextBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){ goToStep(Number(btn.getAttribute('data-goto'))); });
+  });
+wizardBackBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){ goToStep(Number(btn.getAttribute('data-goto'))); });
   });
 
 releaseBtn.addEventListener('click', openGreenlightReview);
@@ -124,7 +149,6 @@ greenlightCancelBtn.addEventListener('click', greenlightCancel);
 fastForwardBtn.addEventListener('click', function(){
     var run = game.currentRun;
     if(!run) return;
-    clearInterval(run.intervalId);
     var guard = 0;
     while(game.currentRun && guard<45){ processNextWeek(); guard++; }
   });
@@ -159,7 +183,7 @@ awardsCloseBtn.addEventListener('click', function(){
   });
 
 skipWeeksBtn.addEventListener('click', function(){
-    if(game.currentRun) return;
+    if(game.currentRun || game.currentShoot) return;
     var n = Number(skipWeeksSelect.value);
     advanceBackgroundSim(game.processedWeek+n);
     addNews('⏭️ '+n+' week(s) passed at the lot.');
@@ -168,7 +192,7 @@ skipWeeksBtn.addEventListener('click', function(){
   });
 
 skipYearBtn.addEventListener('click', function(){
-    if(game.currentRun) return;
+    if(game.currentRun || game.currentShoot) return;
     var target = yearOf(game.processedWeek+1)*52;
     var finalTarget = target>game.processedWeek ? target : target+52;
     advanceBackgroundSim(finalTarget);
@@ -224,6 +248,8 @@ export function applyStarterDefaults(){
     setDefaultSelect(composerSelect, 'library');
     setDefaultSelect(star1Select, 's7');
     setDefaultSelect(star2Select, 's11');
+    goToStep(1);
+    renderMovieCard();
   }
 
 talentRoleFilter.addEventListener('change', renderTalentTab);
@@ -245,6 +271,8 @@ foundStudioBtn.addEventListener('click', function(){
     var name = newStudioNameInput.value.trim() || 'Player Studio';
     foundNewStudio(tier, name);
     game.currentScript = null;
+    game.seasonGoal = null;
+    checkSeasonGoalYearEnd();
     synopsisInput.value = '';
     synopsisWordCount.textContent = '0 words';
     studioCreationModal.classList.add('hidden');

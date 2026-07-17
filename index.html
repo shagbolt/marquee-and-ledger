@@ -147,23 +147,48 @@
     <main class="col-main">
 
       <nav class="tab-nav" id="tabNav">
-        <button class="tab-btn active" data-tab="dashboard">📊 Dashboard</button>
-        <button class="tab-btn" data-tab="development">🎥 Development</button>
-        <button class="tab-btn" data-tab="finance">💰 Finance</button>
-        <button class="tab-btn" data-tab="marketing">📣 Marketing</button>
-        <button class="tab-btn" data-tab="distribution">📺 Distribution</button>
-        <button class="tab-btn" data-tab="competitors">🏢 Competitors</button>
-        <button class="tab-btn" data-tab="international">🌍 International</button>
-        <button class="tab-btn" data-tab="research">📈 Research</button>
-        <button class="tab-btn" data-tab="history">📜 History</button>
-        <button class="tab-btn" data-tab="awards">🏆 Awards</button>
-        <button class="tab-btn" data-tab="studio">🏛 Studio</button>
-        <button class="tab-btn" data-tab="franchises">🎞 Franchises</button>
-        <button class="tab-btn" data-tab="talent">🎭 Talent</button>
+        <button class="tab-btn active" data-tab="dashboard"><span class="tab-icon">📊</span><span class="tab-label">Dashboard</span></button>
+        <button class="tab-btn" data-tab="development"><span class="tab-icon">🎥</span><span class="tab-label">Development</span></button>
+        <button class="tab-btn" data-tab="finance"><span class="tab-icon">💰</span><span class="tab-label">Finance</span></button>
+        <button class="tab-btn" data-tab="marketing"><span class="tab-icon">📣</span><span class="tab-label">Marketing</span></button>
+        <button class="tab-btn" data-tab="distribution"><span class="tab-icon">📺</span><span class="tab-label">Distribution</span></button>
+        <button class="tab-btn" data-tab="competitors"><span class="tab-icon">🏢</span><span class="tab-label">Competitors</span></button>
+        <button class="tab-btn" data-tab="international"><span class="tab-icon">🌍</span><span class="tab-label">International</span></button>
+        <button class="tab-btn" data-tab="research"><span class="tab-icon">📈</span><span class="tab-label">Research</span></button>
+        <button class="tab-btn" data-tab="history"><span class="tab-icon">📜</span><span class="tab-label">History</span></button>
+        <button class="tab-btn" data-tab="awards"><span class="tab-icon">🏆</span><span class="tab-label">Awards</span></button>
+        <button class="tab-btn" data-tab="studio"><span class="tab-icon">🏛</span><span class="tab-label">Studio</span></button>
+        <button class="tab-btn" data-tab="franchises"><span class="tab-icon">🎞</span><span class="tab-label">Franchises</span></button>
+        <button class="tab-btn" data-tab="talent"><span class="tab-icon">🎭</span><span class="tab-label">Talent</span></button>
       </nav>
 
       <!-- ---------- DASHBOARD ---------- -->
       <div class="tab-panel active" id="tab-dashboard">
+
+        <section class="objective-card obj-idle" id="objectiveCard">
+          <div class="objective-main">
+            <span class="objective-icon" id="objectiveIcon">✏️</span>
+            <div class="objective-text">
+              <h2 id="objectiveTitle">Between Pictures</h2>
+              <p id="objectiveContext">No script, no production.</p>
+            </div>
+          </div>
+          <button class="btn-primary objective-btn" id="objectivePrimaryBtn" data-action="develop">🎬 Go to Development</button>
+        </section>
+
+        <div class="season-goal-row" id="seasonGoalRow">
+          <span id="seasonGoalLabel">🎯 —</span>
+          <div class="season-goal-track"><div class="season-goal-fill" id="seasonGoalFill" style="width:0%"></div></div>
+        </div>
+
+        <div class="outcome-summary hidden" id="outcomeSummary">
+          <div class="outcome-summary-head">
+            <strong>This Week</strong>
+            <button type="button" id="outcomeSummaryCloseBtn" aria-label="Dismiss">✕</button>
+          </div>
+          <div id="outcomeSummaryBody"></div>
+        </div>
+
         <section class="panel marquee-panel hidden" id="filmingPanel">
           <h2>🎥 Now Filming <span class="sub">Production Shoot</span></h2>
           <h3 id="filmingTitle"></h3>
@@ -247,118 +272,166 @@
           <h2>🎥 Green-Light a Picture</h2>
           <p class="hint">Assemble your production, set your budgets, and pick your release strategy. Fees rise and fall with each talent's track record.</p>
 
-          <label for="movieTitleInput">Movie Title</label>
-          <input type="text" id="movieTitleInput" placeholder="e.g. Midnight Horizon" maxlength="60">
+          <div class="wizard-steps" id="wizardSteps">
+            <div class="wizard-step-dot" data-step="1"><span class="dot-num">1</span><span class="dot-label">Story</span></div>
+            <div class="wizard-step-dot" data-step="2"><span class="dot-num">2</span><span class="dot-label">Team</span></div>
+            <div class="wizard-step-dot" data-step="3"><span class="dot-num">3</span><span class="dot-label">Plan</span></div>
+            <div class="wizard-step-dot" data-step="4"><span class="dot-num">4</span><span class="dot-label">Release</span></div>
+            <div class="wizard-step-dot" data-step="5"><span class="dot-num">5</span><span class="dot-label">Review</span></div>
+          </div>
 
-          <label for="movieTaglineInput">Tagline</label>
-          <input type="text" id="movieTaglineInput" placeholder="e.g. Some secrets never sleep." maxlength="80">
-
-          <label for="genreSelect">Genre</label>
-          <select id="genreSelect">
-            <option value="Action">Action</option>
-            <option value="Animation">Animation</option>
-            <option value="Comedy">Comedy</option>
-            <option value="Drama">Drama</option>
-            <option value="Horror">Horror</option>
-            <option value="Sci-Fi">Sci-Fi</option>
-          </select>
-
-          <label for="writerSelect">Writer</label>
-          <select id="writerSelect"></select>
-
-          <label for="directorSelect">Director</label>
-          <select id="directorSelect"></select>
-
-          <label for="producerSelect">Producer</label>
-          <select id="producerSelect"></select>
-
-          <label for="composerSelect">Composer</label>
-          <select id="composerSelect"></select>
-
-          <div class="two-col">
-            <div>
-              <label for="star1Select">Lead Star 1</label>
-              <select id="star1Select"></select>
-            </div>
-            <div>
-              <label for="star2Select">Lead Star 2</label>
-              <select id="star2Select"></select>
+          <div class="movie-card-preview">
+            <div class="movie-poster" id="moviePoster"><span id="moviePosterTitle">UNTITLED<br>PICTURE</span></div>
+            <div class="movie-card-info">
+              <div class="movie-card-title" id="movieCardTitle">Untitled Picture</div>
+              <div class="movie-card-meta" id="movieCardMeta">Action · PG-13</div>
+              <div class="movie-card-cast" id="movieCardCast"></div>
+              <div class="movie-card-risk-label" id="movieCardRiskLabel">BUDGET RISK · LOW</div>
+              <div class="risk-gauge"><div class="risk-gauge-marker" id="riskMarker" style="left:4%;"></div></div>
+              <div class="movie-card-qh" id="movieCardQH">Quality 0 · Hype 0</div>
+              <div class="movie-card-rows" id="movieCardRows"></div>
             </div>
           </div>
 
-          <label for="sfxRange">Special Effects Budget</label>
-          <div class="range-row"><input type="range" id="sfxRange" min="0" max="60000000" step="250000" value="7800000"><span class="range-value" id="sfxValue"></span></div>
+          <div class="wizard-step-panel" data-step="1">
+            <label for="movieTitleInput">Movie Title</label>
+            <input type="text" id="movieTitleInput" placeholder="e.g. Midnight Horizon" maxlength="60">
 
-          <label for="marketingRange">Marketing Budget</label>
-          <div class="range-row"><input type="range" id="marketingRange" min="0" max="60000000" step="250000" value="4200000"><span class="range-value" id="marketingValue"></span></div>
+            <label for="movieTaglineInput">Tagline</label>
+            <input type="text" id="movieTaglineInput" placeholder="e.g. Some secrets never sleep." maxlength="80">
 
-          <label for="theaterRange">Target Theater Count</label>
-          <div class="range-row"><input type="range" id="theaterRange" min="100" max="4000" step="50" value="4000"><span class="range-value" id="theaterValue"></span></div>
-
-          <label>Marketing Channels</label>
-          <div class="checkbox-grid">
-            <div class="checkbox-item"><input type="checkbox" id="chTrailers" checked><label for="chTrailers" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">Trailers</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="chBillboards"><label for="chBillboards" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">Billboards</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="chOnline" checked><label for="chOnline" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">Online Publicity</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="chTV"><label for="chTV" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">TV Spots</label></div>
+            <label for="genreSelect">Genre</label>
+            <select id="genreSelect">
+              <option value="Action">Action</option>
+              <option value="Animation">Animation</option>
+              <option value="Comedy">Comedy</option>
+              <option value="Drama">Drama</option>
+              <option value="Horror">Horror</option>
+              <option value="Sci-Fi">Sci-Fi</option>
+            </select>
+            <div class="wizard-nav"><span></span><button type="button" class="btn-primary wizard-next-btn" data-goto="2">Next: Creative Team →</button></div>
           </div>
 
-          <h3 class="finance-subhead">Release Strategy &amp; Calendar</h3>
-          <label for="strategySelect">Release Strategy</label>
-          <select id="strategySelect">
-            <option value="wide">Wide Release</option>
-            <option value="limited">Limited Release</option>
-            <option value="platform">Platform Release</option>
-            <option value="holiday">Holiday Release</option>
-            <option value="summer">Summer Blockbuster</option>
-            <option value="awardsSeason">Awards Season</option>
-          </select>
-          <p class="hint" id="strategyDescText"></p>
+          <div class="wizard-step-panel" data-step="2">
+            <label for="writerSelect">Writer</label>
+            <select id="writerSelect"></select>
 
-          <label for="scheduleRange">Schedule Release</label>
-          <div class="range-row"><input type="range" id="scheduleRange" min="0" max="52" step="1" value="0"><span class="range-value" id="scheduleValueText">ASAP</span></div>
-          <div id="calendarPreview"></div>
+            <label for="directorSelect">Director</label>
+            <select id="directorSelect"></select>
 
-          <h3 class="finance-subhead">Production Details</h3>
-          <label for="runtimeRange">Runtime</label>
-          <div class="range-row"><input type="range" id="runtimeRange" min="80" max="200" step="5" value="110"><span class="range-value" id="runtimeValueText">110 min</span></div>
+            <label for="producerSelect">Producer</label>
+            <select id="producerSelect"></select>
 
-          <div class="two-col">
-            <div>
-              <label for="ratingSelect">MPAA Rating</label>
-              <select id="ratingSelect">
-                <option value="G">G</option>
-                <option value="PG">PG</option>
-                <option value="PG-13" selected>PG-13</option>
-                <option value="R">R</option>
-              </select>
+            <label for="composerSelect">Composer</label>
+            <select id="composerSelect"></select>
+
+            <div class="two-col">
+              <div>
+                <label for="star1Select">Lead Star 1</label>
+                <select id="star1Select"></select>
+              </div>
+              <div>
+                <label for="star2Select">Lead Star 2</label>
+                <select id="star2Select"></select>
+              </div>
             </div>
-            <div>
-              <label for="demographicSelect">Target Demographic</label>
-              <select id="demographicSelect">
-                <option value="Kids & Family">Kids &amp; Family</option>
-                <option value="Teens">Teens</option>
-                <option value="Young Adults">Young Adults</option>
-                <option value="Adults">Adults</option>
-                <option value="General Audience" selected>General Audience</option>
-              </select>
+            <div class="wizard-nav">
+              <button type="button" class="btn-secondary wizard-back-btn" data-goto="1">← Back</button>
+              <button type="button" class="btn-primary wizard-next-btn" data-goto="3">Next: Budget &amp; Plan →</button>
             </div>
           </div>
-          <p class="hint" id="propertyFitText"></p>
 
-          <label for="festivalSelect">Festival Premiere</label>
-          <select id="festivalSelect">
-            <option value="none">No Festival Premiere</option>
-            <option value="cascade">Cascade Film Festival — $80,000 submission</option>
-            <option value="goldenreel">Golden Reel Festival — $120,000 submission</option>
-            <option value="lakeside">Lakeside Independent Festival — $60,000 submission</option>
-            <option value="autumn">Autumn International Festival — $150,000 submission</option>
-          </select>
-          <p class="hint" id="festivalDescText"></p>
+          <div class="wizard-step-panel" data-step="3">
+            <label for="sfxRange">Special Effects Budget</label>
+            <div class="range-row"><input type="range" id="sfxRange" min="0" max="60000000" step="250000" value="7800000"><span class="range-value" id="sfxValue"></span></div>
 
-          <div id="budgetSummaryBody"></div>
-          <div id="formWarning"></div>
-          <button class="btn-primary" id="releaseBtn">🎬 Review for Greenlight</button>
+            <label for="marketingRange">Marketing Budget</label>
+            <div class="range-row"><input type="range" id="marketingRange" min="0" max="60000000" step="250000" value="4200000"><span class="range-value" id="marketingValue"></span></div>
+
+            <label for="theaterRange">Target Theater Count</label>
+            <div class="range-row"><input type="range" id="theaterRange" min="100" max="4000" step="50" value="4000"><span class="range-value" id="theaterValue"></span></div>
+
+            <h3 class="finance-subhead">Production Details</h3>
+            <label for="runtimeRange">Runtime</label>
+            <div class="range-row"><input type="range" id="runtimeRange" min="80" max="200" step="5" value="110"><span class="range-value" id="runtimeValueText">110 min</span></div>
+
+            <div class="two-col">
+              <div>
+                <label for="ratingSelect">MPAA Rating</label>
+                <select id="ratingSelect">
+                  <option value="G">G</option>
+                  <option value="PG">PG</option>
+                  <option value="PG-13" selected>PG-13</option>
+                  <option value="R">R</option>
+                </select>
+              </div>
+              <div>
+                <label for="demographicSelect">Target Demographic</label>
+                <select id="demographicSelect">
+                  <option value="Kids & Family">Kids &amp; Family</option>
+                  <option value="Teens">Teens</option>
+                  <option value="Young Adults">Young Adults</option>
+                  <option value="Adults">Adults</option>
+                  <option value="General Audience" selected>General Audience</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint" id="propertyFitText"></p>
+
+            <label for="festivalSelect">Festival Premiere</label>
+            <select id="festivalSelect">
+              <option value="none">No Festival Premiere</option>
+              <option value="cascade">Cascade Film Festival — $80,000 submission</option>
+              <option value="goldenreel">Golden Reel Festival — $120,000 submission</option>
+              <option value="lakeside">Lakeside Independent Festival — $60,000 submission</option>
+              <option value="autumn">Autumn International Festival — $150,000 submission</option>
+            </select>
+            <p class="hint" id="festivalDescText"></p>
+            <div class="wizard-nav">
+              <button type="button" class="btn-secondary wizard-back-btn" data-goto="2">← Back</button>
+              <button type="button" class="btn-primary wizard-next-btn" data-goto="4">Next: Marketing &amp; Release →</button>
+            </div>
+          </div>
+
+          <div class="wizard-step-panel" data-step="4">
+            <label>Marketing Channels</label>
+            <div class="checkbox-grid">
+              <div class="checkbox-item"><input type="checkbox" id="chTrailers" checked><label for="chTrailers" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">Trailers</label></div>
+              <div class="checkbox-item"><input type="checkbox" id="chBillboards"><label for="chBillboards" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">Billboards</label></div>
+              <div class="checkbox-item"><input type="checkbox" id="chOnline" checked><label for="chOnline" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">Online Publicity</label></div>
+              <div class="checkbox-item"><input type="checkbox" id="chTV"><label for="chTV" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);">TV Spots</label></div>
+            </div>
+
+            <h3 class="finance-subhead">Release Strategy &amp; Calendar</h3>
+            <label for="strategySelect">Release Strategy</label>
+            <select id="strategySelect">
+              <option value="wide">Wide Release</option>
+              <option value="limited">Limited Release</option>
+              <option value="platform">Platform Release</option>
+              <option value="holiday">Holiday Release</option>
+              <option value="summer">Summer Blockbuster</option>
+              <option value="awardsSeason">Awards Season</option>
+            </select>
+            <p class="hint" id="strategyDescText"></p>
+
+            <label for="scheduleRange">Schedule Release</label>
+            <div class="range-row"><input type="range" id="scheduleRange" min="0" max="52" step="1" value="0"><span class="range-value" id="scheduleValueText">ASAP</span></div>
+            <div id="calendarPreview"></div>
+            <div class="wizard-nav">
+              <button type="button" class="btn-secondary wizard-back-btn" data-goto="3">← Back</button>
+              <button type="button" class="btn-primary wizard-next-btn" data-goto="5">Next: Executive Review →</button>
+            </div>
+          </div>
+
+          <div class="wizard-step-panel" data-step="5">
+            <h3 class="finance-subhead" style="margin-top:0;">Full Budget Breakdown</h3>
+            <div id="budgetSummaryBody"></div>
+            <div id="formWarning"></div>
+            <div class="wizard-nav">
+              <button type="button" class="btn-secondary wizard-back-btn" data-goto="4">← Back</button>
+              <button class="btn-primary" id="releaseBtn">🎬 Proceed to Executive Review</button>
+            </div>
+          </div>
         </section>
       </div>
 
