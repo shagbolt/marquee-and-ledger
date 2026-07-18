@@ -50,6 +50,9 @@ js/
     awards.js                Annual awards
     streaming.js              Streaming platform payouts
     season-goals.js          One goal per game-year, tracked and evaluated on year turnover
+    studio-challenges.js     Shorter 8-week goal, alongside the yearly Season Goal
+    rival-personalities.js   Fixed archetypes biasing each rival's genre/budget/quality choices
+    season-finale.js         Year-end recap data, chained after Awards
   ui/
     dom-refs.js              Every DOM element lookup, in one place
     render.js                 All renderX() functions that paint state to the DOM
@@ -113,6 +116,57 @@ Re-verified the balance-critical default-path test after this integration: 15/15
 trials, zero bombs — the shoot's morale effect, if anything, skews slightly positive
 overall (paying to solve problems is the fast-forward default), and didn't disturb the
 existing tuning.
+
+## What's new in this revision: Rival Personalities, Challenges & Season Finale (Priority 5 — complete)
+
+The last of the five original priorities. Three pieces:
+
+### Rival Studio Personalities
+Each of the three named rivals now has a fixed, recognizable archetype — Silverlight
+Pictures chases Action/Sci-Fi blockbusters on bigger budgets, Nova Horizon Studios
+plays for prestige with Drama and a real quality bonus, Ironclad Films ignores demand
+entirely and opportunistically picks whichever genre is currently least saturated.
+Personality is tied to the studio's numeric slot rather than its current name, so it
+survives a bankruptcy reorganization even though the name changes — the "house style"
+reads as a trait of the lot, not of whoever's currently running it. Shows on the
+Competitors tab, and flavors the news wire ("Silverlight Pictures bets big on..." vs.
+"Nova Horizon Studios quietly assembles...").
+
+### Studio Challenges
+A second, shorter-cycle goal alongside the yearly Season Goal — one active at a time,
+an 8-week window, a real cash reward (release a picture, land a Certified Fresh review,
+out-earn a named rival, or survive without a Bomb). Shows just under the Season Goal bar
+on the always-visible Objective Card area. Built on the exact same pattern as Season
+Goals: generate, track progress, resolve on the shared weekly tick, replace with a new
+one.
+
+### Season Finale
+Fires automatically after Awards at year-end: releases and net profit for the year,
+biggest hit and flop, Prestige and Rank movement (before → after, not just current
+values), a rival highlight (whoever had the single best release that year), anything
+newly unlocked (crossing the International/Legal/Going-Public thresholds), and next
+year's Season Goal — genuinely gathered from data that already exists elsewhere,
+not duplicated.
+
+**Two real bugs caught while building this, both from the same root cause** — a
+year-turnover system needs its counter initialized at the *moment a studio is founded*
+(when `processedWeek` is still 0), not lazily on the first weekly tick (when it's
+already 1). Miss that and the first year-end fires a full year late. Season Goals and
+Awards already got this right; the new Season Finale code didn't, at first — caught by
+literally counting the year number on screen after a "Skip to Year End" test rather than
+just checking that a modal opened. A modal appearing proves the code ran, not that it
+ran with the right number in it. Second bug, same family: whether you capture "which
+year just completed" *before* or *after* incrementing the year counter matters — get it
+backwards and everything is labeled one year behind. Both fixed to match the exact
+pattern `checkAwards()` already used correctly.
+
+Verified: personalities showing correctly per studio and surviving a reorg-eligible
+long run, the challenge lifecycle, two consecutive year-turnovers each showing the
+correct year number, the full Awards → Finale chain, state surviving save/load, the
+full stress suite (now also dismissing the Finale modal, which didn't exist when that
+script was first written), and the balance test at 30 trials — zero Bombs.
+
+**All five priorities from the original brief are now complete.**
 
 ## What's new in this revision: Talent Deals, Specialization, Passive-Income Visibility & Help
 

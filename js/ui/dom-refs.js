@@ -258,6 +258,8 @@ export var objectiveContext = $('objectiveContext');
 export var objectivePrimaryBtn = $('objectivePrimaryBtn');
 export var seasonGoalLabel = $('seasonGoalLabel');
 export var seasonGoalFill = $('seasonGoalFill');
+export var challengeLabel = $('challengeLabel');
+export var challengeMeta = $('challengeMeta');
 export var outcomeSummary = $('outcomeSummary');
 export var outcomeSummaryBody = $('outcomeSummaryBody');
 export var outcomeSummaryCloseBtn = $('outcomeSummaryCloseBtn');
@@ -370,4 +372,8 @@ export var awardsYearLabel = $('awardsYearLabel');
 export var awardsBody = $('awardsBody');
 
 export var awardsCloseBtn = $('awardsCloseBtn');
+export var finaleTitle = $('finaleTitle');
+export var finaleBody = $('finaleBody');
+export var finaleModal = $('finaleModal');
+export var finaleCloseBtn = $('finaleCloseBtn');
 

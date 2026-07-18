@@ -7,8 +7,9 @@ import { applyProfitShareDeductions, weekInYearOf, yearOf } from '../systems/mar
 import { INTL_MARKETS, computeApprovalChance, estimateMarketRevenue, marketCost } from '../systems/release-strategy.js';
 import { computeStreamingRevenue, cultStreamEligible } from '../systems/streaming.js';
 import { applyPrestigeDelta, commercialPrestigeComponent, logPrestigeChange, reviewPrestigeComponent, verdictInfo } from '../systems/talent-quality.js';
-import { awardsBody, awardsModal, awardsYearLabel, finalizeStreamingBtn, internationalMarketsList, internationalModal, internationalSummaryLine, intlTotalCostDisplay, platformDescription, streamingModal, streamingPlatformSelect, streamingPreviewAmount, streamingTheatricalSummary, streamingWindowSelect, summaryBody, summaryModal, $ } from '../ui/dom-refs.js';
+import { awardsBody, awardsModal, awardsYearLabel, finaleBody, finaleModal, finaleTitle, finalizeStreamingBtn, internationalMarketsList, internationalModal, internationalSummaryLine, intlTotalCostDisplay, platformDescription, streamingModal, streamingPlatformSelect, streamingPreviewAmount, streamingTheatricalSummary, streamingWindowSelect, summaryBody, summaryModal, $ } from '../ui/dom-refs.js';
 import { computePlayerRank } from '../ui/render.js';
+import { getSeasonGoalLabel } from '../systems/season-goals.js';
 import { animateMoneyCounter, generateCausalExplanation } from '../ui/reveal.js';
 import { addNews, populateTalentSelects, renderAll, setFormDisabled } from '../ui/render.js';
 
@@ -380,6 +381,42 @@ export function showSummaryModal(movie, prestigeBefore, rankBefore){
       '<p class="studio-prestige-note">Studio Prestige moved '+studioSign+movie.studioPrestigeDelta+' (Commercial '+sbSignC+b.studio.commercial+' • Reviews '+sbSignR+b.studio.review+') → now <strong>'+Math.round(player.prestige)+'</strong>. Cash on hand: <strong>'+formatMoney(player.cash)+'</strong>.</p>';
     summaryModal.classList.remove('hidden');
     animateMoneyCounter($('revealProfitCounter'), movie.profit);
+  }
+
+export function showFinaleModal(finale){
+    finaleTitle.textContent = '🎬 Year '+finale.year+' — Season Finale';
+    var rankArrow = finale.rankNow<finale.rankBefore ? '📈' : (finale.rankNow>finale.rankBefore ? '📉' : '➖');
+    var prestigeDelta = Math.round(finale.prestigeNow-finale.prestigeBefore);
+
+    var hitHtml = finale.biggestHit ?
+      '<div class="receipt-line"><span>🌟 Biggest Hit</span><span>'+escapeHtml(finale.biggestHit.title)+' ('+formatMoney(finale.biggestHit.profit)+')</span></div>' :
+      '<div class="receipt-line"><span>🌟 Biggest Hit</span><span>No releases this year</span></div>';
+    var flopHtml = (finale.biggestFlop && finale.biggestFlop!==finale.biggestHit) ?
+      '<div class="receipt-line"><span>💥 Biggest Flop</span><span>'+escapeHtml(finale.biggestFlop.title)+' ('+formatMoney(finale.biggestFlop.profit)+')</span></div>' : '';
+
+    var rivalHtml = finale.rivalHighlight ?
+      '<div class="receipt-line"><span>🏢 Rival Highlight</span><span>'+escapeHtml(finale.rivalHighlight.studio.name)+' — "'+escapeHtml(finale.rivalHighlight.movie.title)+'" ('+formatMoney(finale.rivalHighlight.movie.profit)+')</span></div>' :
+      '<div class="receipt-line"><span>🏢 Rival Highlight</span><span>Quiet year for the competition</span></div>';
+
+    var unlockedHtml = finale.unlockedThisYear.length>0 ?
+      '<h4>🔓 Unlocked This Year</h4><p class="review-quote">'+finale.unlockedThisYear.join(' • ')+'</p>' : '';
+
+    var goalLabel = game.seasonGoal ? getSeasonGoalLabel(game.seasonGoal) : '';
+
+    finaleBody.innerHTML =
+      '<div class="reveal-hero">'+
+        '<div class="reveal-title">'+player.name+'</div>'+
+        '<p class="reveal-cause">'+finale.releaseCount+' picture'+(finale.releaseCount===1?'':'s')+' released, '+formatMoney(finale.totalProfit)+' net for the year.</p>'+
+        '<div class="reveal-movement-row">'+
+          '<div class="reveal-movement"><span class="rm-label">Studio Prestige</span><span class="rm-value">'+Math.round(finale.prestigeBefore)+' → '+Math.round(finale.prestigeNow)+' <span class="rm-delta '+(prestigeDelta>=0?'pos':'neg')+'">('+(prestigeDelta>=0?'+':'')+prestigeDelta+')</span></span></div>'+
+          '<div class="reveal-movement"><span class="rm-label">Industry Rank</span><span class="rm-value">'+rankArrow+' #'+finale.rankBefore+' → #'+finale.rankNow+' of '+finale.rankTotal+'</span></div>'+
+        '</div>'+
+      '</div>'+
+      hitHtml+flopHtml+rivalHtml+
+      unlockedHtml+
+      (goalLabel ? '<h4>🎯 Next Year\u2019s Objective</h4><p class="review-quote">'+escapeHtml(goalLabel)+'</p>' : '');
+
+    finaleModal.classList.remove('hidden');
   }
 
 export function showAwardsModal(a){

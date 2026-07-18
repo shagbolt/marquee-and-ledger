@@ -1,10 +1,13 @@
-import { clamp, escapeHtml, generateMovieTitle, pickAIName, rand, randInt, uid } from '../data/constants.js';
+import { GENRES, clamp, escapeHtml, generateMovieTitle, pickAIName, rand, randInt, uid } from '../data/constants.js';
 import { aiStudios, chargeOverheadForWeek, currentTier, game, player } from '../state/game-state.js';
 import { checkAwards } from './awards.js';
 import { checkSeasonGoalYearEnd } from './season-goals.js';
+import { checkChallengeExpiry } from './studio-challenges.js';
+import { checkSeasonFinale } from './season-finale.js';
 import { tickPassiveIncome } from './franchise.js';
 import { chargeLoanPaymentsForWeek, checkQuarterlyEarnings, computeIndustryReport, genreDemand, getSaturation, pickWeightedGenre, recordRelease, weekInYearOf, yearOf } from './market.js';
 import { applyPrestigeDelta, commercialPrestigeComponent, reviewPrestigeComponent, verdictInfo } from './talent-quality.js';
+import { getPersonality, personalityFlavorVerb } from './rival-personalities.js';
 import { addNews } from '../ui/render.js';
 
 export var NEW_STUDIO_NAMES = ['Bluewater Media','Crescent Point Films','Redwood Entertainment','Harbor Light Studios','Vantage Pictures','Northgate Films','Old Compass Studios','Amberline Pictures','Fifth Street Films','Paperclip Media'];
@@ -63,12 +66,24 @@ export function tickPlayerHeat(){
   }
 
 export function generateAIMovie(studio, week){
+    var personality = getPersonality(studio);
+
     // "Study market trends" + "copy successful genres": weight toward the industry's
     // current top-grossing genre, and further toward whatever genre just made the player
     // a hit (playerHeat) — smart studios chase what's working, not just raw demand.
-    var boosts = [{ genre: computeIndustryReport().topGenre, factor: 1.35 }];
-    if(game.playerHeatWeeksRemaining>0){ boosts.push({ genre: game.playerHeatGenre, factor: 1.5 }); }
-    var genre = pickWeightedGenre(boosts);
+    var genre;
+    if(personality.opportunistic){
+      // Scrappy Underdog ignores trends entirely and picks whichever genre is currently
+      // least crowded — the "underserved niche" read the Research tab already surfaces
+      // to the player, just applied automatically here instead of chosen by a person.
+      var bySaturation = GENRES.slice().sort(function(a,b){ return getSaturation(a)-getSaturation(b); });
+      genre = bySaturation[0];
+    } else {
+      var boosts = [{ genre: computeIndustryReport().topGenre, factor: 1.35 }];
+      if(game.playerHeatWeeksRemaining>0){ boosts.push({ genre: game.playerHeatGenre, factor: 1.5 }); }
+      Object.keys(personality.genreBias).forEach(function(g){ boosts.push({ genre:g, factor:personality.genreBias[g] }); });
+      genre = pickWeightedGenre(boosts);
+    }
 
     // "Delay releases": a smart studio sometimes holds off rather than piling into an
     // already-oversaturated genre. Returning null here is a real "no release this week."
@@ -88,11 +103,11 @@ export function generateAIMovie(studio, week){
       title = generateMovieTitle(genre);
     }
 
-    var quality = clamp(Math.round(rand(35,90) + studio.prestige/12 + rand(-5,5)), 5, 100);
+    var quality = clamp(Math.round(rand(35,90) + studio.prestige/12 + personality.qualityBonus + rand(-5,5)), 5, 100);
     var demand = genreDemand[genre] || 60;
     var saturation = getSaturation(genre);
     var confidenceScale = 1 + (demand-60)/200; // hot trends -> bigger bets, both directions
-    var budget = clamp(studio.cash*rand(0.15,0.45)*confidenceScale, 6000000, 90000000);
+    var budget = clamp(studio.cash*rand(0.15,0.45)*confidenceScale*personality.budgetMultiplier, 6000000, 90000000);
     var hype = clamp(Math.round(rand(25,85) + studio.prestige/12 + (demand-60)*0.2 - saturation*0.12), 0, 100);
     if(game.playerHeatWeeksRemaining>0 && genre===game.playerHeatGenre){ hype = clamp(hype+8, 0, 100); }
     if(isSequel){ quality = clamp(quality-3, 0, 100); hype = clamp(hype+10, 0, 100); budget = Math.round(budget*1.15); }
@@ -124,7 +139,7 @@ export function generateAIMovie(studio, week){
       verdict: info.emoji+' '+info.label, verdictCls: info.cls
     };
     studio.moviesAll.push(movie);
-    addNews('🎬 Y'+yearOf(week)+' W'+weekInYearOf(week)+' — '+escapeHtml(studio.name)+' released "'+escapeHtml(title)+'"'+(isSequel?' 🔁':'')+' ('+genre+'). '+movie.verdict);
+    addNews('🎬 Y'+yearOf(week)+' W'+weekInYearOf(week)+' — '+escapeHtml(studio.name)+' '+personalityFlavorVerb(studio)+' "'+escapeHtml(title)+'"'+(isSequel?' 🔁':'')+' ('+genre+'). '+movie.verdict);
     checkStudioBankruptcy(studio);
     return movie;
   }
@@ -142,6 +157,8 @@ export function advanceOneWeek(){
     tickPassiveIncome();
     checkAwards();
     checkSeasonGoalYearEnd();
+    checkChallengeExpiry();
+    checkSeasonFinale();
   }
 export function advanceBackgroundSim(targetWeek){
     while(game.processedWeek < targetWeek){

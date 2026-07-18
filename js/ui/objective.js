@@ -1,7 +1,8 @@
 import { currentTier, game, player } from '../state/game-state.js';
 import { formatMoney } from '../data/constants.js';
 import { getSeasonGoalLabel, getSeasonGoalProgress } from '../systems/season-goals.js';
-import { eventModal, greenlightModal, objectiveCard, objectiveContext, objectiveIcon, objectivePrimaryBtn, objectiveTitle, postProductionModal, seasonGoalFill, seasonGoalLabel, skipWeeksBtn, skipYearBtn, testScreeningModal } from './dom-refs.js';
+import { getChallengeLabel, getChallengeProgress } from '../systems/studio-challenges.js';
+import { challengeLabel, challengeMeta, eventModal, greenlightModal, objectiveCard, objectiveContext, objectiveIcon, objectivePrimaryBtn, objectiveTitle, postProductionModal, seasonGoalFill, seasonGoalLabel, skipWeeksBtn, skipYearBtn, testScreeningModal } from './dom-refs.js';
 
 // True whenever a decision the player must resolve is already on screen — the Advance
 // Week button disables rather than silently doing nothing, since a modal blocking the
@@ -77,6 +78,13 @@ export function renderObjectiveCard(){
       seasonGoalFill.style.width = Math.round(progress.pct)+'%';
       seasonGoalFill.style.background = progress.complete ? 'var(--emerald)' : 'var(--gold)';
     }
+  }
+
+  var challenge = game.activeChallenge;
+  if(challenge){
+    var cProgress = getChallengeProgress(challenge);
+    challengeLabel.textContent = '⚡ '+getChallengeLabel(challenge);
+    challengeMeta.textContent = cProgress ? cProgress.weeksLeft+'w left · '+formatMoney(challenge.reward)+' reward' : '';
   }
 
   var activeProduction = !!(game.currentShoot || game.currentRun);

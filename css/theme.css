@@ -246,6 +246,9 @@
   .season-goal-row span:first-child{ white-space:nowrap; }
   .season-goal-track{ flex:1; height:6px; background:var(--backdrop); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
   .season-goal-fill{ height:100%; background:var(--gold); transition:width 0.3s ease; }
+  .challenge-row{ justify-content:space-between; margin-top:-8px; }
+  .challenge-row #challengeLabel{ color:var(--ink); }
+  .challenge-row #challengeMeta{ margin:0; }
 
   .outcome-summary{
     background:var(--panel); border:1px solid var(--gold); border-radius:var(--radius);

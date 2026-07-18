@@ -163,6 +163,11 @@
         <div class="season-goal-track"><div class="season-goal-fill" id="seasonGoalFill" style="width:0%"></div></div>
       </div>
 
+      <div class="season-goal-row challenge-row" id="challengeRow">
+        <span id="challengeLabel">⚡ —</span>
+        <span id="challengeMeta" class="hint"></span>
+      </div>
+
       <div class="outcome-summary hidden" id="outcomeSummary">
         <div class="outcome-summary-head">
           <strong>This Week</strong>
@@ -508,7 +513,7 @@
           <h2>🏢 Rival Studios <span class="sub">Live</span></h2>
           <div class="table-scroll">
             <table>
-              <thead><tr><th>Studio</th><th>Cash</th><th>Prestige</th><th>Films</th></tr></thead>
+              <thead><tr><th>Studio</th><th>Style</th><th>Cash</th><th>Prestige</th><th>Films</th></tr></thead>
               <tbody id="competitorsTableBody"></tbody>
             </table>
           </div>
@@ -818,6 +823,18 @@
     <div id="awardsBody"></div>
     <div class="modal-close-row">
       <button class="btn-close-modal" id="awardsCloseBtn">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SEASON FINALE MODAL ===================== -->
+<div class="modal-overlay hidden" id="finaleModal">
+  <div class="modal-box receipt-modal">
+    <h3 id="finaleTitle">🎬 Season Finale</h3>
+    <div class="receipt-sub">The year in review.</div>
+    <div id="finaleBody"></div>
+    <div class="modal-close-row">
+      <button class="btn-close-modal" id="finaleCloseBtn">Roll Into Next Year</button>
     </div>
   </div>
 </div>

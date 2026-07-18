@@ -8,6 +8,7 @@ import { DEPARTMENTS, awardsCampaignEligibleMovies, awardsCampaignUnlocked, laun
 import { computeHype, computeQuality, prestigeTier } from '../systems/talent-quality.js';
 import { renderTalentTab } from './talent-tab.js';
 import { renderObjectiveCard } from './objective.js';
+import { getPersonality } from '../systems/rival-personalities.js';
 import { showMovieDetail } from './movie-detail.js';
 import { activeLoansList, awardsCampaignGateHint, awardsCampaignList, awardsHistoryTableBody, budgetSummaryBody, calendarPreview, cashDisplay, competitorsTableBody, composerSelect, demographicSelect, departmentsGrid, directorSelect, greenlightBody, greenlightModal, distributionTableBody, internationalTabLock, researchTabLock, equityGateHint, festivalDescText, festivalSelect, formWarning, franchiseList, genreDemandTableBody, genreSelect, goPublicBtn, historyTableBody, industryReportBody, internationalLockedBanner, investorConfidenceDisplay, investorTermsDisplay, ipoGateHint, ipoYearDisplay, loanAmountRange, loanAmountValue, loanMaxDisplay, loanRateDisplay, marketingCurrentStats, marketingRange, marketingValue, movieTitleInput, newsFeedList, passiveIncomeBody, preprodPanel, prestigeBarFill, producerSelect, prestigeDisplay, prestigeHistoryList, prestigeMeterPointer, prestigeMeterValue, prestigeTierLabel, profitShareDealsList, propertyFitText, publicCompanyStatus, rankDisplay, ratingSelect, releaseBtn, researchContent, researchLockedBanner, researchLockedHint, revoltCountDisplay, rewriteOptionsList, runtimeRange, runtimeValueText, scheduleRange, scheduleValueText, scriptDevPanel, scriptReportBlock, scriptReportBody, sfxRange, sfxValue, slotReportBody, star1Select, star2Select, strategyDescText, strategySelect, studioBioBody, studioDataPanel, studioNameInput, studioRumorsBody, studioTierLine, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, theaterValue, timeControls, weekYearDisplay, writerSelect, yearInReviewText } from './dom-refs.js';
 
@@ -53,7 +54,10 @@ export function renderCompetitors(){
     var sorted = aiStudios.slice().sort(function(a,b){ return b.cash-a.cash; });
     competitorsTableBody.innerHTML = sorted.map(function(s){
       var marker = (s.reorgCount||0)>0 ? '🔄 ' : '';
-      return '<tr><td title="'+((s.reorgCount||0)>0 ? 'Reorganized '+s.reorgCount+' time(s)' : '')+'">'+marker+escapeHtml(s.name)+'</td><td class="'+(s.cash<0?'neg':'')+'">'+formatMoney(s.cash)+'</td><td>'+Math.round(s.prestige)+'</td><td>'+s.moviesAll.length+'</td></tr>';
+      var personality = getPersonality(s);
+      return '<tr><td title="'+((s.reorgCount||0)>0 ? 'Reorganized '+s.reorgCount+' time(s)' : '')+'">'+marker+escapeHtml(s.name)+'</td>'+
+        '<td title="'+escapeHtml(personality.tagline)+'">'+escapeHtml(personality.label)+'</td>'+
+        '<td class="'+(s.cash<0?'neg':'')+'">'+formatMoney(s.cash)+'</td><td>'+Math.round(s.prestige)+'</td><td>'+s.moviesAll.length+'</td></tr>';
     }).join('');
   }
 
