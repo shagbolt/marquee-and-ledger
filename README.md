@@ -168,6 +168,21 @@ script was first written), and the balance test at 30 trials — zero Bombs.
 
 **All five priorities from the original brief are now complete.**
 
+## What's new in this revision: Left-Aligned Layout on Wide Screens
+
+A small, targeted fix reported directly from a very wide monitor: `#app` was capped at
+1800px and centered (`margin:0 auto`) — reasonable on a normal display, but on a wide
+enough screen the leftover space gets split evenly on both sides, leaving a genuinely
+large dead zone on the left that pushes the whole layout (including the new right-column
+Rival Tracker) further right than it needs to be. Changed to `margin:0`, so the layout
+now hugs the left edge (just the existing 20px body padding) and every bit of leftover
+width on a wide screen accumulates on the right instead.
+
+Verified with a direct measurement at a 2560px viewport (simulating the reported 32"
+monitor scenario): left gap dropped to exactly the 20px body padding, with all 740px of
+slack correctly landing on the right instead of splitting 370/370 down the middle. Also
+confirmed no regression at narrow viewports — the left gap there is unchanged.
+
 ## What's new in this revision: Producer Negotiation
 
 Gives a hired Producer's existing skill stat a real, visible moment instead of just a
