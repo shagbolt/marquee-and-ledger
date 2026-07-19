@@ -1,4 +1,4 @@
-import { composerFee, composers, dealRetainerCost, directorFee, directors, escapeHtml, formatMoney, producerFee, producers, signTalentDeal, starFee, stars, writerFee, writers } from '../data/constants.js';
+import { composerFee, composers, dealRetainerCost, directorFee, directors, escapeHtml, formatMoney, producerFee, producers, sfxHouseFee, sfxHouses, signTalentDeal, starFee, stars, writerFee, writers } from '../data/constants.js';
 import { player } from '../state/game-state.js';
 import { addNews, renderHeader } from './render.js';
 import { talentRoleFilter, talentRosterList, talentSortBy } from './dom-refs.js';
@@ -14,6 +14,7 @@ function buildTalentList(){
   directors.forEach(function(p){ list.push({ person:p, role:'director', roleLabel:'Director', fee:directorFee(p) }); });
   producers.forEach(function(p){ list.push({ person:p, role:'producer', roleLabel:'Producer', fee:producerFee(p) }); });
   composers.forEach(function(p){ list.push({ person:p, role:'composer', roleLabel:'Composer', fee:composerFee(p) }); });
+  sfxHouses.forEach(function(p){ list.push({ person:p, role:'sfx', roleLabel:'SFX House', fee:sfxHouseFee(p) }); });
   stars.forEach(function(p){ list.push({ person:p, role:'star', roleLabel:'Star', fee:starFee(p) }); });
   return list;
 }
@@ -24,6 +25,7 @@ function getFilmography(person, role){
     if(role==='director') return m.director===person;
     if(role==='producer') return m.producerRef===person;
     if(role==='composer') return m.composerRef===person;
+    if(role==='sfx') return m.sfxHouseRef===person;
     if(role==='star') return m.star1===person || m.star2===person;
     return false;
   }).sort(function(a,b){ return (b.releaseWeek||0)-(a.releaseWeek||0); });
@@ -62,7 +64,7 @@ export function renderTalentTab(){
     var statLabel = t.role==='star' ? 'Star Power' : 'Skill';
     var statValue = t.role==='star' ? p.starPower : p.skill;
     var dealHtml = '';
-    if(!p.isSelf && !p.isLibrary){
+    if(!p.isSelf && !p.isLibrary && !p.isPractical){
       if(p.dealsRemaining>0){
         dealHtml = '<div class="talent-deal-status">🤝 Deal active — '+p.dealsRemaining+' picture'+(p.dealsRemaining===1?'':'s')+' left at 20% off</div>';
       } else {
@@ -83,10 +85,10 @@ export function renderTalentTab(){
     btn.addEventListener('click', function(){
       var role = btn.getAttribute('data-role');
       var id = btn.getAttribute('data-id');
-      var roster = { writer:writers, director:directors, producer:producers, composer:composers, star:stars }[role];
+      var roster = { writer:writers, director:directors, producer:producers, composer:composers, sfx:sfxHouses, star:stars }[role];
       var person = roster.filter(function(p){ return p.id===id; })[0];
       if(!person) return;
-      var fee = { writer:writerFee, director:directorFee, producer:producerFee, composer:composerFee, star:starFee }[role](person);
+      var fee = { writer:writerFee, director:directorFee, producer:producerFee, composer:composerFee, sfx:sfxHouseFee, star:starFee }[role](person);
       var retainer = dealRetainerCost(person, fee);
       if(retainer>player.cash){
         if(!confirm('This retainer costs '+formatMoney(retainer)+', putting the studio into debt. Sign anyway?')) return;

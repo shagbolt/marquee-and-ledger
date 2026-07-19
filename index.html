@@ -348,6 +348,10 @@
                 <select id="star2Select"></select>
               </div>
             </div>
+
+            <button type="button" class="btn-secondary" id="negotiateBtn" style="width:100%;margin-top:14px;">🤝 Ask the Producer to Work the Deal</button>
+            <div id="negotiateResult"></div>
+
             <div class="wizard-nav">
               <button type="button" class="btn-secondary wizard-back-btn" data-goto="1">← Back</button>
               <button type="button" class="btn-primary wizard-next-btn" data-goto="3">Next: Budget &amp; Plan →</button>
@@ -355,8 +359,13 @@
           </div>
 
           <div class="wizard-step-panel" data-step="3">
-            <label for="sfxRange">Special Effects Budget</label>
+            <label for="sfxRange">Special Effects Budget Ceiling</label>
             <div class="range-row"><input type="range" id="sfxRange" min="0" max="60000000" step="250000" value="7800000"><span class="range-value" id="sfxValue"></span></div>
+            <p class="hint">The most you're willing to pay for effects. Houses whose fee fits under this bid for the job below \u2014 anyone whose fee runs higher declines and tells you what they'd actually need.</p>
+
+            <label for="sfxHouseSelect">SFX House</label>
+            <select id="sfxHouseSelect"></select>
+            <p class="hint" id="sfxHouseDescText"></p>
 
             <label for="marketingRange">Marketing Budget</label>
             <div class="range-row"><input type="range" id="marketingRange" min="0" max="60000000" step="250000" value="4200000"><span class="range-value" id="marketingValue"></span></div>
@@ -624,6 +633,7 @@
                 <option value="director">Directors</option>
                 <option value="producer">Producers</option>
                 <option value="composer">Composers</option>
+                <option value="sfx">SFX Houses</option>
                 <option value="star">Stars</option>
               </select>
             </div>
@@ -642,6 +652,17 @@
       </div>
 
     </main>
+
+    <aside class="col-right">
+      <section class="panel" id="rivalTrackerPanel">
+        <h2>🏢 Rival Tracker <span class="sub">Live</span></h2>
+        <div id="rivalTrackerList"></div>
+      </section>
+      <section class="panel" id="recentReleasesPanel">
+        <h2>🎬 Recent Releases</h2>
+        <div id="recentReleasesList"></div>
+      </section>
+    </aside>
   </div>
 </div>
 
@@ -799,6 +820,18 @@
     </div>
     <div class="modal-close-row">
       <button class="btn-close-modal" id="helpCloseBtn">Back to the Lot</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CONFIRM DIALOG (replaces native confirm()) ===================== -->
+<div class="modal-overlay hidden" id="confirmDialogModal">
+  <div class="modal-box event-modal" style="max-width:440px;">
+    <h3>⚠️ CONFIRM</h3>
+    <p id="confirmDialogBody" style="color:var(--ink);font-size:0.9rem;text-align:center;margin:6px 0 18px;"></p>
+    <div class="greenlight-actions">
+      <button type="button" class="btn-secondary" id="confirmDialogNoBtn">Cancel</button>
+      <button type="button" class="btn-primary" id="confirmDialogYesBtn" style="margin-top:0;">Proceed</button>
     </div>
   </div>
 </div>

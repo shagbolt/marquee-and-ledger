@@ -137,6 +137,8 @@ export var prestigeTierLabel = $('prestigeTierLabel');
 export var prestigeHistoryList = $('prestigeHistoryList');
 
 export var competitorsTableBody = $('competitorsTableBody');
+export var rivalTrackerList = $('rivalTrackerList');
+export var recentReleasesList = $('recentReleasesList');
 
 export var skipWeeksSelect = $('skipWeeksSelect');
 
@@ -194,8 +196,12 @@ export var producerSelect = $('producerSelect');
 export var star1Select = $('star1Select');
 
 export var star2Select = $('star2Select');
+export var negotiateBtn = $('negotiateBtn');
+export var negotiateResult = $('negotiateResult');
 
 export var sfxRange = $('sfxRange');
+export var sfxHouseSelect = $('sfxHouseSelect');
+export var sfxHouseDescText = $('sfxHouseDescText');
 
 export var sfxValue = $('sfxValue');
 

@@ -63,13 +63,14 @@ export function prestigeTier(p){
     return {label:'Legendary Studio', cls:'t5'};
   }
 
-export function computeQuality(writerSkill, directorSkill, sfx, mkt, genre, star1Power, star2Power){
+export function computeQuality(writerSkill, directorSkill, sfx, mkt, genre, star1Power, star2Power, sfxSkill){
     var idealRatio = GENRE_SFX_IDEAL[genre];
     var total = sfx+mkt;
     var actualRatio = total>0 ? sfx/total : idealRatio;
     var balanceScore = clamp(100 - Math.abs(idealRatio-actualRatio)*250, 0, 100);
     var avgStar = (star1Power+star2Power)/2;
-    var q = writerSkill*0.35 + directorSkill*0.35 + balanceScore*0.20 + avgStar*0.10;
+    var sfxHouseSkill = sfxSkill!=null ? sfxSkill : 15; // matches Practical Effects' baseline for older call sites
+    var q = writerSkill*0.30 + directorSkill*0.30 + balanceScore*0.15 + sfxHouseSkill*0.15 + avgStar*0.10;
     q += rand(-5,5);
     return clamp(Math.round(q), 0, 100);
   }

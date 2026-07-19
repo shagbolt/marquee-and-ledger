@@ -10,10 +10,10 @@ import { checkChallengeExpiry } from './systems/studio-challenges.js';
 import { checkSeasonFinale } from './systems/season-finale.js';
 import { goPublic, investorTerms, loanInterestRate, takeLoan, takeProfitShareDeal, yearOf } from './systems/market.js';
 import { REWRITE_OPTIONS, analyzeSynopsis, scaledCost } from './systems/release-strategy.js';
-import { analyzeScriptBtn, awardsCloseBtn, awardsModal, backToLaunchChoiceBtn, chBillboards, chOnline, chTV, chTrailers, clearScriptBtn, composerSelect, confirmInternationalBtn, continueSavedGameBtn, demographicSelect, destBtns, directorSelect, exportSaveBtn, fastForwardBtn, festivalSelect, finaleCloseBtn, finaleModal, filmingFastForwardBtn, finalizeStreamingBtn, foundStudioBtn, genreSelect, goPublicBtn, greenlightCancelBtn, helpBtn, helpCloseBtn, helpModal, greenlightConfirmBtn, greenlightDelayBtn, greenlightIncreaseBudgetBtn, greenlightModal, greenlightReduceScopeBtn, greenlightRewriteBtn, importFileInput, importSaveBtn, launchChoicePanel, loadGameBtn, loanAmountRange, loanAmountValue, marketingRange, movieDetailCloseBtn, movieDetailModal, movieTaglineInput, movieTitleInput, newStudioFormPanel, newStudioNameInput, nowShowingContent, nowShowingPlaceholder, objectivePrimaryBtn, outcomeSummary, outcomeSummaryCloseBtn, producerSelect, ratingSelect, releaseBtn, resetBtn, rewriteOptionsList, runtimeRange, saveGameBtn, scheduleRange, sfxRange, showNewStudioFormBtn, skipInternationalBtn, skipWeeksBtn, skipWeeksSelect, skipYearBtn, star1Select, star2Select, strategySelect, streamingPlatformSelect, streamingWindowSelect, studioCreationModal, studioNameInput, summaryCloseBtn, summaryModal, synopsisInput, synopsisWordCount, tabBtns, tabPanels, takeEquityBtn, takeInvestorBtn, takeLoanBtn, talentRoleFilter, talentSortBy, theaterRange, themeToggleBtn, tierOptionsList, wizardBackBtns, wizardNextBtns, writerSelect } from './ui/dom-refs.js';
+import { analyzeScriptBtn, awardsCloseBtn, awardsModal, backToLaunchChoiceBtn, chBillboards, chOnline, chTV, chTrailers, clearScriptBtn, composerSelect, confirmInternationalBtn, continueSavedGameBtn, demographicSelect, destBtns, directorSelect, exportSaveBtn, fastForwardBtn, festivalSelect, finaleCloseBtn, finaleModal, filmingFastForwardBtn, finalizeStreamingBtn, foundStudioBtn, genreSelect, goPublicBtn, greenlightCancelBtn, helpBtn, helpCloseBtn, helpModal, greenlightConfirmBtn, greenlightDelayBtn, greenlightIncreaseBudgetBtn, greenlightModal, greenlightReduceScopeBtn, greenlightRewriteBtn, importFileInput, importSaveBtn, launchChoicePanel, loadGameBtn, loanAmountRange, loanAmountValue, marketingRange, movieDetailCloseBtn, movieDetailModal, movieTaglineInput, negotiateBtn, movieTitleInput, newStudioFormPanel, newStudioNameInput, nowShowingContent, nowShowingPlaceholder, objectivePrimaryBtn, outcomeSummary, outcomeSummaryCloseBtn, producerSelect, ratingSelect, releaseBtn, resetBtn, rewriteOptionsList, runtimeRange, saveGameBtn, scheduleRange, sfxHouseSelect, sfxRange, showNewStudioFormBtn, skipInternationalBtn, skipWeeksBtn, skipWeeksSelect, skipYearBtn, star1Select, star2Select, strategySelect, streamingPlatformSelect, streamingWindowSelect, studioCreationModal, studioNameInput, summaryCloseBtn, summaryModal, synopsisInput, synopsisWordCount, tabBtns, tabPanels, takeEquityBtn, takeInvestorBtn, takeLoanBtn, talentRoleFilter, talentSortBy, theaterRange, themeToggleBtn, tierOptionsList, wizardBackBtns, wizardNextBtns, writerSelect } from './ui/dom-refs.js';
 import { addNews, populateTalentSelects, renderAll, renderBudgetSummary, renderScriptReport } from './ui/render.js';
 import { renderTalentTab } from './ui/talent-tab.js';
-import { goToStep, renderMovieCard } from './ui/wizard.js';
+import { goToStep, renderMovieCard, runNegotiation } from './ui/wizard.js';
 
 function showTab(tabId){
     tabBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tab')===tabId); });
@@ -141,12 +141,18 @@ goPublicBtn.addEventListener('click', function(){
 
 ['input','change'].forEach(function(evt){
     [genreSelect, writerSelect, directorSelect, producerSelect, composerSelect, star1Select, star2Select,
-     sfxRange, marketingRange, theaterRange, chTrailers, chBillboards, chOnline, chTV,
+     sfxRange, sfxHouseSelect, marketingRange, theaterRange, chTrailers, chBillboards, chOnline, chTV,
      strategySelect, scheduleRange, runtimeRange, ratingSelect, demographicSelect, festivalSelect,
      movieTitleInput, movieTaglineInput].forEach(function(el){
       el.addEventListener(evt, renderBudgetSummary);
       el.addEventListener(evt, renderMovieCard);
     });
+  });
+
+negotiateBtn.addEventListener('click', function(){
+    runNegotiation();
+    renderBudgetSummary();
+    renderMovieCard();
   });
 
 wizardNextBtns.forEach(function(btn){

@@ -1,4 +1,4 @@
-import { DEMOGRAPHIC_GENRE_FIT, FESTIVALS, RATING_GENRE_FIT, applySpecialtyBonus, clamp, composerFee, consumeDealSlot, computeProductionWeeks, directorFee, escapeHtml, formatMoney, producerFee, producerFeeDiscount, producerRiskReduction, rand, randInt, runtimeFitScore, starFee, uid, writerFee } from '../data/constants.js';
+import { DEMOGRAPHIC_GENRE_FIT, FESTIVALS, RATING_GENRE_FIT, applySpecialtyBonus, clamp, composerFee, consumeDealSlot, getSfxHouseById, sfxHouseFee, computeProductionWeeks, directorFee, escapeHtml, formatMoney, producerFee, producerFeeDiscount, producerRiskReduction, rand, randInt, runtimeFitScore, starFee, uid, writerFee } from '../data/constants.js';
 import { finishRun } from './release-flow.js';
 import { aiStudios, chargeOverheadForWeek, game, player } from '../state/game-state.js';
 import { advanceBackgroundSim, advanceOneWeek, generateAIMovie, tickPlayerHeat } from '../systems/ai-studios.js';
@@ -10,10 +10,10 @@ import { SHOOT_EVENTS } from '../systems/shoot-events.js';
 import { ADDITIONAL_PHOTOGRAPHY_EVENT, POST_PRODUCTION_TIERS, postProductionCost } from '../systems/post-production.js';
 import { RELEASE_STRATEGIES, TEST_SCREENING_CHOICES, applyTestScreeningChoice, checkTimingMatch, generateTestScreeningFeedback, neutralStory, scaledCost } from '../systems/release-strategy.js';
 import { buildReviewSummary, checkBreakoutEligibility, computeHype, computeQuality, computeReviews, pickBreakoutTalent } from '../systems/talent-quality.js';
-import { $, audienceBlurbText, audienceScoreDisplay, chBillboards, chOnline, chTV, chTrailers, criticsBlurbText, criticsScoreDisplay, cumulativeBig, demographicSelect, divergenceTag, eventBody, eventModal, eventTitle, festivalSelect, filmingMeta, filmingMoraleDisplay, filmingPanel, filmingSpendDisplay, filmingTickerBody, filmingTitle, filmingWeekDisplay, genreSelect, greenlightModal, marketingRange, movieTaglineInput, movieTitleInput, nowShowingContent, nowShowingMeta, nowShowingPlaceholder, nowShowingTitle, postProductionIntro, postProductionModal, postProductionTierList, ratingSelect, runtimeRange, scheduleRange, sfxRange, strategySelect, testScreeningChoices, testScreeningModal, testScreeningScores, testScreeningSuggestion, theaterRange, theatersNowDisplay, tickerTableBody, weeksElapsedDisplay } from '../ui/dom-refs.js';
+import { $, audienceBlurbText, audienceScoreDisplay, chBillboards, chOnline, chTV, chTrailers, criticsBlurbText, criticsScoreDisplay, cumulativeBig, demographicSelect, divergenceTag, eventBody, eventModal, eventTitle, festivalSelect, filmingMeta, filmingMoraleDisplay, filmingPanel, filmingSpendDisplay, filmingTickerBody, filmingTitle, filmingWeekDisplay, genreSelect, greenlightModal, marketingRange, movieTaglineInput, movieTitleInput, nowShowingContent, nowShowingMeta, nowShowingPlaceholder, nowShowingTitle, postProductionIntro, postProductionModal, postProductionTierList, ratingSelect, runtimeRange, scheduleRange, sfxHouseSelect, sfxRange, strategySelect, testScreeningChoices, testScreeningModal, testScreeningScores, testScreeningSuggestion, theaterRange, theatersNowDisplay, tickerTableBody, weeksElapsedDisplay } from '../ui/dom-refs.js';
 import { addNews, getSelectedTalent, populateTalentSelects, renderAll, renderCompetitors, renderGreenlightReview, renderHeader, renderNews, renderSlotReport, setFormDisabled } from '../ui/render.js';
 import { renderObjectiveCard } from '../ui/objective.js';
-import { goToStep } from '../ui/wizard.js';
+import { goToStep, getNegotiatedDiscount, resetNegotiation } from '../ui/wizard.js';
 import { renderDecisionCard, renderDecisionOutcome } from '../ui/decision-card.js';
 
 export function openGreenlightReview(){
@@ -34,15 +34,21 @@ export function confirmGreenlight(){
     var title = movieTitleInput.value.trim() || 'Untitled Picture';
     var tagline = movieTaglineInput.value.trim();
     var genre = genreSelect.value;
-    var sfx = Number(sfxRange.value);
+    var x = getSfxHouseById(sfxHouseSelect.value);
+    var sfx = sfxHouseFee(x);
     var mkt = Number(marketingRange.value);
     var theaterCount = Number(theaterRange.value);
     var channels = [chTrailers, chBillboards, chOnline, chTV].filter(function(c){ return c.checked; }).length;
 
     var wCost = writerFee(sel.w), dCost = directorFee(sel.d), pCost = producerFee(sel.p), cCost = composerFee(sel.c), s1Cost = starFee(sel.s1), s2Cost = starFee(sel.s2);
-    consumeDealSlot(sel.w); consumeDealSlot(sel.d); consumeDealSlot(sel.p); consumeDealSlot(sel.c); consumeDealSlot(sel.s1); consumeDealSlot(sel.s2);
-    // A skilled producer negotiates the OTHER four fees down; their own fee is paid in full.
-    var talentSubtotal = wCost+dCost+cCost+s1Cost+s2Cost;
+    wCost = Math.round(wCost*(1-getNegotiatedDiscount('writer', sel)));
+    dCost = Math.round(dCost*(1-getNegotiatedDiscount('director', sel)));
+    cCost = Math.round(cCost*(1-getNegotiatedDiscount('composer', sel)));
+    s1Cost = Math.round(s1Cost*(1-getNegotiatedDiscount('star1', sel)));
+    s2Cost = Math.round(s2Cost*(1-getNegotiatedDiscount('star2', sel)));
+    consumeDealSlot(sel.w); consumeDealSlot(sel.d); consumeDealSlot(sel.p); consumeDealSlot(sel.c); consumeDealSlot(sel.s1); consumeDealSlot(sel.s2); consumeDealSlot(x);
+    // A skilled producer negotiates the OTHER fees down; their own fee is paid in full.
+    var talentSubtotal = wCost+dCost+cCost+s1Cost+s2Cost+sfx;
     var producerDiscountRate = sel.p.isSelf ? 0 : producerFeeDiscount(sel.p);
     var producerDiscountAmt = Math.round(talentSubtotal*producerDiscountRate);
     var runtime = Number(runtimeRange.value);
@@ -50,7 +56,7 @@ export function confirmGreenlight(){
     var demographic = demographicSelect.value;
     var festival = FESTIVALS.filter(function(f){ return f.id===festivalSelect.value; })[0] || FESTIVALS[0];
     var festivalCost = scaledCost(festival.costBase);
-    var totalBudget = talentSubtotal-producerDiscountAmt+pCost+sfx+mkt+festivalCost;
+    var totalBudget = talentSubtotal-producerDiscountAmt+pCost+mkt+festivalCost;
     if(totalBudget>player.cash){
       var overBy = totalBudget-player.cash;
       var proceed = confirm('This production runs '+formatMoney(overBy)+' over your available cash. '+player.name+' would go into debt (cash after: '+formatMoney(player.cash-totalBudget)+'). Proceed anyway?');
@@ -65,11 +71,14 @@ export function confirmGreenlight(){
       // A hired producer/composer gets a live roster reference (so prestige/fee evolve
       // like every other crew role); Self-Produced/Library Music have no persistent
       // person behind them, so the *Ref stays null and the *Name/*IsX fields carry the
-      // display info instead.
+      // display info instead. SFX Houses follow the exact same pattern, Practical
+      // Effects standing in for "no outside house" the way Library Music does.
       producerRef: sel.p.isSelf ? null : sel.p,
       producerName: sel.p.name, producerIsSelf: !!sel.p.isSelf, producerSkill: sel.p.skill, producerPrestige: sel.p.prestige,
       composerRef: sel.c.isLibrary ? null : sel.c,
       composerName: sel.c.name, composerIsLibrary: !!sel.c.isLibrary, composerSkill: sel.c.skill, composerPrestige: sel.c.prestige,
+      sfxHouseRef: x.isPractical ? null : x,
+      sfxHouseName: x.name, sfxHouseIsPractical: !!x.isPractical, sfxHouseSkill: x.skill, sfxHousePrestige: x.prestige,
       writerCost: wCost, directorCost: dCost, producerCost: pCost, composerCost: cCost, star1Cost: s1Cost, star2Cost: s2Cost,
       producerDiscountAmt: producerDiscountAmt,
       sfxBudget: sfx, marketingBudget: mkt, theaterCount: theaterCount, channels: channels,
@@ -84,6 +93,7 @@ export function confirmGreenlight(){
       effDirectorSkill: applySpecialtyBonus(sel.d.skill, sel.d, genre),
       effStar1Power: applySpecialtyBonus(sel.s1.starPower, sel.s1, genre),
       effStar2Power: applySpecialtyBonus(sel.s2.starPower, sel.s2, genre),
+      effSfxSkill: x.skill,
       qualityDelta: 0, hypeDelta: 0, eventCost: 0, eventLabel: null, eventLog: [],
       testScreeningCost: 0,
       strategy: strategySelect.value,
@@ -96,6 +106,7 @@ export function confirmGreenlight(){
     game.currentScript = null;
     game.pendingFranchiseLink = null;
     goToStep(1);
+    resetNegotiation();
 
     renderAll();
     setFormDisabled(true);
@@ -400,7 +411,7 @@ export function openPostProductionEvent(movie){
   }
 
 export function computeFilmMetrics(movie){
-    var quality = computeQuality(movie.effWriterSkill, movie.effDirectorSkill, movie.sfxBudget, movie.marketingBudget, movie.genre, movie.effStar1Power, movie.effStar2Power);
+    var quality = computeQuality(movie.effWriterSkill, movie.effDirectorSkill, movie.sfxBudget, movie.marketingBudget, movie.genre, movie.effStar1Power, movie.effStar2Power, movie.effSfxSkill);
     quality = clamp(quality + movie.qualityDelta, 0, 100);
     var hype = computeHype(movie.marketingBudget, movie.effStar1Power, movie.effStar2Power, movie.channels);
     hype = clamp(hype + movie.hypeDelta, 0, 100);

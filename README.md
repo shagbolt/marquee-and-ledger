@@ -168,6 +168,156 @@ script was first written), and the balance test at 30 trials — zero Bombs.
 
 **All five priorities from the original brief are now complete.**
 
+## What's new in this revision: Producer Negotiation
+
+Gives a hired Producer's existing skill stat a real, visible moment instead of just a
+silent background discount. Deliberately the lean version, after weighing a heavier
+slider-and-walkout design against whether it was solving a real problem or just adding
+a fourth way to save money alongside three that already existed (Producer's passive
+discount, Multi-Picture Deals, and the SFX budget ceiling) — see the design discussion
+in this session's history if you want the full reasoning.
+
+- **One click, one moment, never a downside.** "🤝 Ask \[Producer] to Work the Deal"
+  appears in the wizard's Team step once a real Producer is hired (hidden entirely for
+  Self-Produced — there's no one to send into the room). Click it and each of Writer,
+  Director, Composer (unless it's Library Music — nothing to negotiate on a flat
+  licensing fee), and both Stars gets an independent roll: succeed and that person's
+  fee drops 5–20%, fail and nothing changes. Worst case is exactly where the passive
+  discount already had you.
+- **The odds are genuinely about leverage.** Producer skill helps you; the *other
+  person's* prestige helps them — a scrappy unproven writer folds easily, someone with
+  real standing pushes back hard. A skilled Producer against a modest talent succeeds
+  most of the time; a weak Producer against a big name rarely moves them at all.
+- **Negotiation is keyed to the exact cast it was rolled for**, not tracked with a
+  separate reset flag — change any one of the five people afterward and the old result
+  simply stops matching, the button re-enables, and the result panel clears. One
+  invalidation check, no listener to remember to wire up separately.
+
+**A real bug caught immediately by testing the actual charge, not just the preview**:
+the button's own click handler only refreshed its own little result panel — it never
+told the budget summary or the Greenlight review to update, both of which live on a
+*different* wizard step. Navigate forward after negotiating and you'd see stale,
+pre-discount numbers right up until some unrelated field happened to change first. Fixed
+by having the click handler explicitly trigger the same two render functions every other
+field change already does. Confirmed by walking all the way through to the actual
+cash charged at Greenlight and checking it matched the preview to the dollar, not just
+checking that a number changed somewhere.
+
+Verified: the button's visibility gated correctly on Self-Produced, a real negotiation
+roll with a genuine mix of successes and failures, the budget summary and Greenlight
+review updating immediately after negotiating, the actual charge at confirmation
+matching the preview exactly, cast changes correctly invalidating a stale result, the
+stress suite, and the balance test at 30 trials — zero Bombs.
+
+## What's new in this revision: SFX Houses — Vendor Companies
+
+The first "company" role in the game rather than an individual — special effects are no
+longer just a budget slider, they're a real vendor negotiation. Writer, Director,
+Composer, Producer, and Stars all stay exactly as they are (this was deliberately scoped
+to SFX only, not a blanket change).
+
+- **You propose a ceiling, the market responds** — the SFX slider is now "the most
+  you're willing to pay," not a straight spend. Nine options respond live as you move
+  it: eight real houses plus Practical Effects (In-House), the always-available
+  fallback mirroring how Self-Produced and Library Music already work. A house whose
+  real fee exceeds your ceiling doesn't just disappear — it shows disabled, stating
+  exactly what it would need, so you're learning the market, not guessing at it.
+- **Fees work exactly like every other role** — built from skill and prestige, no flat
+  baseline, ranging from Practical Effects' $150K to Zenith Frame Works' $51.9M at
+  their starting stats. Multi-picture deals and the fee-discount mechanic both apply to
+  SFX houses automatically, since the discount already lives inside the fee function
+  itself rather than being wired per-role.
+- **A real Quality formula change** — SFX house skill is now a genuine 15% factor in
+  Quality, not just the existing budget-to-genre balance score. Writer and Director
+  dropped from 35%/35% to 30%/30% and the balance score from 20% to 15% to make room,
+  without displacing them as the dominant factors. Re-verified at 30 trials post-change
+  — still zero Bombs, though the mix shifted a little toward Break-Even, which tracks:
+  the *default* path (no house explicitly chosen) now runs through Practical Effects'
+  modest skill of 15 rather than getting a quality contribution from raw budget alone.
+  That's the "you get what you pay for" tradeoff working as intended, not a regression.
+- **Prestige evolves like Composer's** — a craft role judged mainly by critics, same
+  formula, same immediate-streaming dampening, same permanent snapshot on the History
+  detail view so past prestige doesn't drift with what the house is doing today.
+- Browsable on the Talent tab under a new SFX Houses filter, same card layout as every
+  other role, same deal-signing button.
+
+**Two real bugs caught in testing, both worth remembering:**
+- The dropdown wasn't wired into the shared input-listener list that drives budget
+  summary and movie-card refreshes — picking a different house silently changed nothing
+  on screen until some *other* field happened to change too. A UI element existing and
+  being interactive isn't the same as it actually being connected to anything.
+- **`sfxHouses` was never added to the save/load serialization at all** — signing a
+  deal worked perfectly, then evaporated on reload. Found by actually testing the
+  round-trip rather than assuming a new roster array would be swept up automatically
+  the way it might be in a less explicit save system. Fixed in three places: the
+  serializer, `setTalentRosters()`, and — easy to miss — `relinkMovieTalent()`, which
+  re-links a movie's `sfxHouseRef` to the restored roster after load the same way it
+  already did for `composerRef`/`producerRef`.
+
+Verified: budget-gated qualify/decline logic at both a low and a high ceiling, live
+selection actually updating the budget summary and Greenlight review, a complete
+production cycle through settlement with the chosen house's name and prestige row
+appearing correctly on the receipt, Talent tab crediting the right house with the right
+film, the History detail view showing the house correctly, a deal surviving a full
+save/load round-trip, the stress suite, and the balance test at 30 trials — zero Bombs.
+
+**Next up, by design**: giving the Producer a budget to negotiate Writer, Director,
+Composer, and Star fees — discussed and scoped, deliberately held until this shipped
+clean rather than building two half-finished systems at once.
+
+## What's new in this revision: UI Formatting & Layout Fixes
+
+A batch of real, specific bugs reported with screenshots, plus a genuine layout gap on
+wide screens. Each one verified with a measurement, not a visual guess.
+
+- **Help modal text invisible in dark mode** — turned out to be pure staleness: the
+  deployed site was still on `color:var(--ink)` for `.help-body p`, a theme-flipping
+  variable, against the Help modal's fixed cream "paper" background — in dark mode
+  `--ink` resolves to a light color, nearly invisible on light paper. My local sandbox
+  already had the correct fix (`--paper-ink`, a non-theme-dependent color meant
+  specifically for paper-styled content); confirmed by diffing the deployed CSS against
+  local. **You'll need to push this zip for that fix to actually take effect.**
+- **Wizard "Next" button overflowing past its container** — a real bug, not staleness.
+  `.btn-primary` sets `width:100%`; inside the wizard's flex nav row with
+  `flex:0 0 auto`, that 100% became the flex-basis, and `flex-shrink:0` meant it
+  couldn't compress to fit alongside the Back button — pushing it past the panel edge.
+  Fixed by giving buttons inside `.wizard-nav` their own `width:auto` override.
+- **Light-mode button text contrast** — measured with an actual WCAG contrast-ratio
+  script rather than eyeballing it: inactive tab and destination labels were sitting at
+  3.9–4.3:1 against their panel backgrounds, below the 4.5:1 small text needs. Gave them
+  a dedicated darker color in light mode specifically, rather than darkening the shared
+  `--ink-dim` variable used elsewhere (which would have dimmed things — like hint text —
+  that were already fine). Same audit caught a second, unreported case — the dark-mode
+  Reset button at 3.23:1 — fixed alongside it.
+- **Scrollbars crowding text** — the Help modal, Studio Prestige history list, and news
+  feed all had little to no right-padding before their scrollbar, so content ran right
+  up against it. All three now have real breathing room.
+- **Too much unused space on wide screens** — the real structural one. `#app` was
+  capped at `max-width:1400px` regardless of how wide the browser actually was, and nothing
+  used the space beyond that. Widened the cap to 1800px, and added a genuine third
+  column that activates above 1580px: a live Rival Tracker and a Recent Releases panel,
+  both reading data that already exists (`aiStudios`, `player.moviesAll`) rather than
+  tracking anything new. Below that width the column disappears entirely and the layout
+  falls back to exactly what it was.
+- **Found and removed an orphaned file** while re-running the static checker —
+  `js/ui/confirm-dialog.js`, a `window.confirm()` replacement that was never actually
+  wired up (no HTML, no DOM refs, nothing importing it). Harmless, but it was making the
+  static-check output noisy for anyone who runs it later.
+
+**A methodology note worth keeping**: my first pass at auditing button contrast used a
+script that walked up the DOM for `background-color`, which doesn't see CSS gradients
+or alpha-blended `rgba()` overlays — it flagged several buttons that are actually fine
+(a solid gold gradient button and a semi-transparent nav background both read as
+near-black to a naive check). Caught by computing contrast by hand against the actual
+gradient stops and the properly alpha-blended color before trusting the "failures" — a
+tool telling you something is broken is a reason to verify, not a reason to fix
+something that isn't.
+
+Verified: wide viewport (1900px) shows the new column with live data, narrow viewport
+(900px) hides it with no layout break, the wizard button no longer overflows (confirmed
+by direct pixel measurement, not eyeballing), contrast ratios recomputed correctly
+post-fix, the full stress suite, and the balance test at 30 trials — zero Bombs.
+
 ## What's new in this revision: Talent Deals, Specialization, Passive-Income Visibility & Help
 
 Four smaller, independent features, roughly in the order they were built:

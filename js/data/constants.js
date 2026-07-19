@@ -153,6 +153,33 @@ export function getComposerById(id){
     return composers.filter(function(c){ return c.id===id; })[0] || LIBRARY_MUSIC;
   }
 
+// SFX Houses work like every other role — a fee formula built from skill and prestige,
+// prestige that evolves after every release. The one real difference: you propose a
+// budget ceiling first, and only houses whose fee fits under it are available — a
+// house whose fee exceeds your ceiling doesn't show as "too expensive," it declines
+// and states what it would actually need, the same information either way.
+export var PRACTICAL_EFFECTS = { id:'practical', name:'Practical Effects (In-House)', skill:15, prestige:8, isPractical:true };
+export var sfxHouses = [
+    {id:'x1', name:'Sparkhouse VFX', skill:18, prestige:12},
+    {id:'x2', name:'Backlot Digital', skill:32, prestige:22},
+    {id:'x3', name:'Ferrous FX', skill:45, prestige:35},
+    {id:'x4', name:'Pixel Foundry', skill:58, prestige:48},
+    {id:'x5', name:'Nightshade Visual', skill:68, prestige:58},
+    {id:'x6', name:'Aurora Motion Pictures', skill:78, prestige:68},
+    {id:'x7', name:'Monolith Digital Arts', skill:88, prestige:78},
+    {id:'x8', name:'Zenith Frame Works', skill:96, prestige:90}
+  ];
+
+export function sfxHouseFee(h){
+    if(h.isPractical) return 150000;
+    return dealAdjust(round10k(h.skill*400000 + h.prestige*150000), h);
+  }
+
+export function getSfxHouseById(id){
+    if(id===PRACTICAL_EFFECTS.id || !id) return PRACTICAL_EFFECTS;
+    return sfxHouses.filter(function(h){ return h.id===id; })[0] || PRACTICAL_EFFECTS;
+  }
+
 export var SELF_PRODUCED = { id:'self', name:'Self-Produced (No Producer)', skill:15, prestige:5, isSelf:true };
 
 export var producers = [
@@ -183,6 +210,26 @@ export function getProducerById(id){
 export function producerFeeDiscount(t){
     return (t.skill/100) * 0.15; // up to 15% off combined writer/director/composer/star fees
   }
+
+// The passive discount above always applies quietly in the background. This is the
+// active version — a one-time, no-risk roll per person the Producer works, called once
+// when the player clicks "Ask the Producer to Work the Deal." A skilled Producer
+// against a low-prestige person succeeds often; a weak Producer against someone with
+// real standing rarely moves them. Never a downside — a failed roll just means no
+// extra discount on top of what the Producer's passive skill already provides.
+export function rollProducerNegotiation(producer, roles){
+    var results = {};
+    var lines = [];
+    roles.forEach(function(r){
+      var successChance = clamp(0.35 + producer.skill/100*0.50 - r.person.prestige/100*0.35, 0.05, 0.9);
+      var succeeded = Math.random() < successChance;
+      var pct = succeeded ? clamp(0.05 + producer.skill/100*0.10 + rand(-0.02,0.02), 0.02, 0.20) : 0;
+      results[r.key] = pct;
+      lines.push({ key:r.key, name:r.person.name, succeeded:succeeded, pct:pct });
+    });
+    return { results:results, lines:lines };
+  }
+
 export function producerRiskReduction(t){
     return (t.skill/100) * 0.30; // up to 30% off Production Event dollar costs
   }
@@ -275,12 +322,13 @@ export function findTier(id){
 // Setters for cross-module restore — writers/directors/stars/composers/uidCounter are
 // owned by this module; save/load has to go through these rather than reassigning the
 // imported bindings directly.
-export function setTalentRosters(w, d, s, c, p){
+export function setTalentRosters(w, d, s, c, p, x){
   writers = w;
   directors = d;
   stars = s;
   if(c) composers = c;
   if(p) producers = p;
+  if(x) sfxHouses = x;
 }
 export function bumpUidCounter(n){
   uidCounter = Math.max(uidCounter, n || 1);

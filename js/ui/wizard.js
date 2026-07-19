@@ -1,8 +1,8 @@
-import { GENRE_GRADIENTS, escapeHtml, formatMoney } from '../data/constants.js';
+import { GENRE_GRADIENTS, escapeHtml, formatMoney, rollProducerNegotiation } from '../data/constants.js';
 import { game } from '../state/game-state.js';
 import { RELEASE_STRATEGIES } from '../systems/release-strategy.js';
 import { weekInYearOf, yearOf } from '../systems/market.js';
-import { genreSelect, movieCardCast, movieCardMeta, movieCardQH, movieCardRiskLabel, movieCardRows, movieCardTitle, movieTaglineInput, movieTitleInput, moviePoster, moviePosterTitle, ratingSelect, riskMarker, scheduleRange, strategySelect, wizardStepDots, wizardStepPanels } from './dom-refs.js';
+import { genreSelect, movieCardCast, movieCardMeta, movieCardQH, movieCardRiskLabel, movieCardRows, movieCardTitle, movieTaglineInput, movieTitleInput, moviePoster, moviePosterTitle, negotiateBtn, negotiateResult, ratingSelect, riskMarker, scheduleRange, strategySelect, wizardStepDots, wizardStepPanels } from './dom-refs.js';
 import { computeGreenlightPreview, getSelectedTalent } from './render.js';
 
 export function goToStep(n){
@@ -54,4 +54,61 @@ export function renderMovieCard(){
     '<div class="movie-card-row"><span>Production budget</span><span>'+formatMoney(p.total)+'</span></div>'+
     '<div class="movie-card-row"><span>Lead</span><span>'+escapeHtml(sel.s1.name)+' — Star power '+sel.s1.starPower+'</span></div>'+
     '<div class="movie-card-row"><span>Release window</span><span>'+(strategy?strategy.name:'')+' · Week '+weekInYearOf(targetWeek)+', Year '+yearOf(targetWeek)+'</span></div>';
+
+  renderNegotiateState();
+}
+
+// Negotiation state lives here, keyed to the exact five people it was rolled for —
+// changing any one of them naturally invalidates the old result without a separate
+// reset listener, since the discount simply stops matching whoever's newly selected.
+var negotiationState = null; // { key, results, lines }
+
+function negotiationKey(sel){
+  return [sel.w.id, sel.d.id, sel.c.id, sel.s1.id, sel.s2.id].join('|');
+}
+
+function negotiationRoles(sel){
+  var roles = [
+    { key:'writer', person:sel.w }, { key:'director', person:sel.d },
+    { key:'star1', person:sel.s1 }, { key:'star2', person:sel.s2 }
+  ];
+  if(!sel.c.isLibrary){ roles.push({ key:'composer', person:sel.c }); } // nothing to negotiate on a flat licensing fee
+  return roles;
+}
+
+// Read by computeGreenlightPreview / renderBudgetSummary / confirmGreenlight — returns
+// 0 unless there's a still-valid result for exactly this cast.
+export function getNegotiatedDiscount(roleKey, sel){
+  if(!negotiationState || negotiationState.key!==negotiationKey(sel)) return 0;
+  return negotiationState.results[roleKey] || 0;
+}
+
+export function renderNegotiateState(){
+  if(!negotiateBtn) return;
+  var sel = getSelectedTalent();
+  if(sel.p.isSelf){
+    negotiateBtn.style.display = 'none';
+    negotiateResult.innerHTML = '';
+    return;
+  }
+  negotiateBtn.style.display = '';
+  var validForCurrentCast = negotiationState && negotiationState.key===negotiationKey(sel);
+  negotiateBtn.disabled = validForCurrentCast;
+  negotiateBtn.textContent = validForCurrentCast ? '🤝 Deal Already Worked for This Team' : '🤝 Ask '+sel.p.name+' to Work the Deal';
+  negotiateResult.innerHTML = validForCurrentCast ? negotiationState.lines.map(function(l){
+    return '<div class="mini-row"><div class="mini-row-top"><span>'+(l.succeeded?'✅':'❌')+' '+escapeHtml(l.name)+'</span>'+
+      '<span style="color:'+(l.succeeded?'var(--emerald)':'var(--ink-dim)')+';">'+(l.succeeded?'-'+Math.round(l.pct*100)+'%':'Won\u2019t move')+'</span></div></div>';
+  }).join('') : '';
+}
+
+export function runNegotiation(){
+  var sel = getSelectedTalent();
+  if(sel.p.isSelf) return;
+  var roll = rollProducerNegotiation(sel.p, negotiationRoles(sel));
+  negotiationState = { key: negotiationKey(sel), results: roll.results, lines: roll.lines };
+  renderNegotiateState();
+}
+
+export function resetNegotiation(){
+  negotiationState = null;
 }

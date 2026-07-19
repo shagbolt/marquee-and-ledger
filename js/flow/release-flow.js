@@ -191,6 +191,7 @@ export function finalizeStreamingDeal(){
     var writerBase = commercial + criticsDelta;
     var directorBase = commercial + criticsDelta;
     var composerBase = commercial + criticsDelta;
+    var sfxBase = commercial + criticsDelta;
     // Producers are judged more on delivering the whole production successfully than on
     // critical acclaim specifically — commercial performance counts for more here, and
     // the "reviews" half uses the overall audience+critics blend rather than critics alone.
@@ -210,6 +211,7 @@ export function finalizeStreamingDeal(){
       if(directorBase>0) directorBase *= 0.5;
       if(composerBase>0) composerBase *= 0.5;
       if(producerBase>0) producerBase *= 0.5;
+      if(sfxBase>0) sfxBase *= 0.5;
       if(starBase>0) starBase *= 0.5;
       if(studioBase>0) studioBase *= 0.5;
     }
@@ -222,6 +224,7 @@ export function finalizeStreamingDeal(){
     };
     if(movie.composerRef){ movie.prestigeDeltas.composer = applyPrestigeDelta(movie.composerRef, composerBase); }
     if(movie.producerRef){ movie.prestigeDeltas.producer = applyPrestigeDelta(movie.producerRef, producerBase); }
+    if(movie.sfxHouseRef){ movie.prestigeDeltas.sfxHouse = applyPrestigeDelta(movie.sfxHouseRef, sfxBase); }
     movie.prestigeBreakdown = {
       writer:{commercial:commercial, review:criticsDelta, reviewLabel:'Critics'},
       director:{commercial:commercial, review:criticsDelta, reviewLabel:'Critics'},
@@ -231,6 +234,7 @@ export function finalizeStreamingDeal(){
     };
     if(movie.composerRef){ movie.prestigeBreakdown.composer = {commercial:commercial, review:criticsDelta, reviewLabel:'Critics'}; }
     if(movie.producerRef){ movie.prestigeBreakdown.producer = {commercial:Math.round(commercial*1.2), review:Math.round(reviewDeltaStudio*0.4), reviewLabel:'Overall Reviews'}; }
+    if(movie.sfxHouseRef){ movie.prestigeBreakdown.sfxHouse = {commercial:commercial, review:criticsDelta, reviewLabel:'Critics'}; }
 
     // A permanent snapshot — prestige keeps moving with every picture a person does
     // afterward, so this is the only place "what was their prestige on this film" can
@@ -241,7 +245,8 @@ export function finalizeStreamingDeal(){
       star1: Math.round(movie.star1.prestige),
       star2: Math.round(movie.star2.prestige),
       producer: movie.producerRef ? Math.round(movie.producerRef.prestige) : null,
-      composer: movie.composerRef ? Math.round(movie.composerRef.prestige) : null
+      composer: movie.composerRef ? Math.round(movie.composerRef.prestige) : null,
+      sfxHouse: movie.sfxHouseRef ? Math.round(movie.sfxHouseRef.prestige) : null
     };
 
     movie.studioPrestigeDelta = applyPrestigeDelta(player, studioBase);
@@ -356,7 +361,7 @@ export function showSummaryModal(movie, prestigeBefore, rankBefore){
       '<div class="receipt-line"><span>'+(movie.producerIsSelf?'Producing (Self)':'Producer Fee')+' — '+escapeHtml(movie.producerName)+'</span><span>'+formatMoney(movie.producerCost)+'</span></div>'+
       '<div class="receipt-line"><span>Lead Fee — '+escapeHtml(movie.star1.name)+'</span><span>'+formatMoney(movie.star1Cost)+'</span></div>'+
       '<div class="receipt-line"><span>Lead Fee — '+escapeHtml(movie.star2.name)+'</span><span>'+formatMoney(movie.star2Cost)+'</span></div>'+
-      '<div class="receipt-line"><span>Special Effects Budget</span><span>'+formatMoney(movie.sfxBudget)+'</span></div>'+
+      '<div class="receipt-line"><span>'+(movie.sfxHouseIsPractical?'Effects (In-House)':'SFX House')+' — '+escapeHtml(movie.sfxHouseName)+'</span><span>'+formatMoney(movie.sfxBudget)+'</span></div>'+
       '<div class="receipt-line"><span>Marketing Budget</span><span>'+formatMoney(movie.marketingBudget)+'</span></div>'+
       festivalFeeLine+
       eventLine+
@@ -376,6 +381,7 @@ export function showSummaryModal(movie, prestigeBefore, rankBefore){
       prestigeRowHtml(movie.director, 'Director', d.director, b.director)+
       (movie.producerRef ? prestigeRowHtml(movie.producerRef, 'Producer', d.producer, b.producer) : '')+
       (movie.composerRef ? prestigeRowHtml(movie.composerRef, 'Composer', d.composer, b.composer) : '')+
+      (movie.sfxHouseRef ? prestigeRowHtml(movie.sfxHouseRef, 'SFX House', d.sfxHouse, b.sfxHouse) : '')+
       prestigeRowHtml(movie.star1, 'Lead', d.star1, b.star1)+
       prestigeRowHtml(movie.star2, 'Lead', d.star2, b.star2)+
       '<p class="studio-prestige-note">Studio Prestige moved '+studioSign+movie.studioPrestigeDelta+' (Commercial '+sbSignC+b.studio.commercial+' • Reviews '+sbSignR+b.studio.review+') → now <strong>'+Math.round(player.prestige)+'</strong>. Cash on hand: <strong>'+formatMoney(player.cash)+'</strong>.</p>';

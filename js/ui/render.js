@@ -1,4 +1,4 @@
-import { DEMOGRAPHIC_GENRE_FIT, FESTIVALS, GENRES, GENRE_GRADIENTS, LIBRARY_MUSIC, RATING_GENRE_FIT, SELF_PRODUCED, clamp, composerFee, composers, directorFee, directors, escapeHtml, formatMoney, getComposerById, getProducerById, producerFee, producerFeeDiscount, producers, runtimeFitScore, starFee, stars, writerFee, writers } from '../data/constants.js';
+import { DEMOGRAPHIC_GENRE_FIT, FESTIVALS, GENRES, GENRE_GRADIENTS, LIBRARY_MUSIC, PRACTICAL_EFFECTS, RATING_GENRE_FIT, SELF_PRODUCED, clamp, composerFee, composers, directorFee, directors, escapeHtml, formatMoney, getComposerById, getProducerById, getSfxHouseById, producerFee, producerFeeDiscount, producers, runtimeFitScore, sfxHouseFee, sfxHouses, starFee, stars, writerFee, writers } from '../data/constants.js';
 import { PLATFORM_LABELS } from '../flow/release-flow.js';
 import { aiStudios, currentTier, finance, game, newsLog, player, prestigeHistory } from '../state/game-state.js';
 import { FRANCHISE_EXTENSIONS, computeFranchiseValue, developFranchiseProduction, extensionCost, extensionEligible, extensionLumpPayout, extensionQuarterlyPayout, franchiseEligibleMovies, launchLumpExtension, launchPassiveExtension } from '../systems/franchise.js';
@@ -9,8 +9,9 @@ import { computeHype, computeQuality, prestigeTier } from '../systems/talent-qua
 import { renderTalentTab } from './talent-tab.js';
 import { renderObjectiveCard } from './objective.js';
 import { getPersonality } from '../systems/rival-personalities.js';
+import { getNegotiatedDiscount } from './wizard.js';
 import { showMovieDetail } from './movie-detail.js';
-import { activeLoansList, awardsCampaignGateHint, awardsCampaignList, awardsHistoryTableBody, budgetSummaryBody, calendarPreview, cashDisplay, competitorsTableBody, composerSelect, demographicSelect, departmentsGrid, directorSelect, greenlightBody, greenlightModal, distributionTableBody, internationalTabLock, researchTabLock, equityGateHint, festivalDescText, festivalSelect, formWarning, franchiseList, genreDemandTableBody, genreSelect, goPublicBtn, historyTableBody, industryReportBody, internationalLockedBanner, investorConfidenceDisplay, investorTermsDisplay, ipoGateHint, ipoYearDisplay, loanAmountRange, loanAmountValue, loanMaxDisplay, loanRateDisplay, marketingCurrentStats, marketingRange, marketingValue, movieTitleInput, newsFeedList, passiveIncomeBody, preprodPanel, prestigeBarFill, producerSelect, prestigeDisplay, prestigeHistoryList, prestigeMeterPointer, prestigeMeterValue, prestigeTierLabel, profitShareDealsList, propertyFitText, publicCompanyStatus, rankDisplay, ratingSelect, releaseBtn, researchContent, researchLockedBanner, researchLockedHint, revoltCountDisplay, rewriteOptionsList, runtimeRange, runtimeValueText, scheduleRange, scheduleValueText, scriptDevPanel, scriptReportBlock, scriptReportBody, sfxRange, sfxValue, slotReportBody, star1Select, star2Select, strategyDescText, strategySelect, studioBioBody, studioDataPanel, studioNameInput, studioRumorsBody, studioTierLine, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, theaterValue, timeControls, weekYearDisplay, writerSelect, yearInReviewText } from './dom-refs.js';
+import { activeLoansList, awardsCampaignGateHint, awardsCampaignList, awardsHistoryTableBody, budgetSummaryBody, calendarPreview, cashDisplay, competitorsTableBody, composerSelect, demographicSelect, departmentsGrid, directorSelect, greenlightBody, greenlightModal, distributionTableBody, internationalTabLock, researchTabLock, rivalTrackerList, recentReleasesList, equityGateHint, festivalDescText, festivalSelect, formWarning, franchiseList, genreDemandTableBody, genreSelect, goPublicBtn, historyTableBody, industryReportBody, internationalLockedBanner, investorConfidenceDisplay, investorTermsDisplay, ipoGateHint, ipoYearDisplay, loanAmountRange, loanAmountValue, loanMaxDisplay, loanRateDisplay, marketingCurrentStats, marketingRange, marketingValue, movieTitleInput, newsFeedList, passiveIncomeBody, preprodPanel, prestigeBarFill, producerSelect, prestigeDisplay, prestigeHistoryList, prestigeMeterPointer, prestigeMeterValue, prestigeTierLabel, profitShareDealsList, propertyFitText, publicCompanyStatus, rankDisplay, ratingSelect, releaseBtn, researchContent, researchLockedBanner, researchLockedHint, revoltCountDisplay, rewriteOptionsList, runtimeRange, runtimeValueText, scheduleRange, scheduleValueText, scriptDevPanel, scriptReportBlock, scriptReportBody, sfxHouseDescText, sfxHouseSelect, sfxRange, sfxValue, slotReportBody, star1Select, star2Select, strategyDescText, strategySelect, studioBioBody, studioDataPanel, studioNameInput, studioRumorsBody, studioTierLine, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, theaterValue, timeControls, weekYearDisplay, writerSelect, yearInReviewText } from './dom-refs.js';
 
 export function computePlayerRank(){
     var ranked = [{name:player.name, prestige:player.prestige, isPlayer:true}];
@@ -58,6 +59,33 @@ export function renderCompetitors(){
       return '<tr><td title="'+((s.reorgCount||0)>0 ? 'Reorganized '+s.reorgCount+' time(s)' : '')+'">'+marker+escapeHtml(s.name)+'</td>'+
         '<td title="'+escapeHtml(personality.tagline)+'">'+escapeHtml(personality.label)+'</td>'+
         '<td class="'+(s.cash<0?'neg':'')+'">'+formatMoney(s.cash)+'</td><td>'+Math.round(s.prestige)+'</td><td>'+s.moviesAll.length+'</td></tr>';
+    }).join('');
+  }
+
+// Wide-viewport right column — reuses exactly the data already computed for the
+// Competitors and History tabs, just condensed and always visible rather than a tab
+// you have to switch to. Only rendered into DOM that exists (col-right is display:none
+// below 1580px), so this is cheap even when the panel isn't shown.
+export function renderRivalTracker(){
+    if(!rivalTrackerList) return;
+    var sorted = aiStudios.slice().sort(function(a,b){ return b.cash-a.cash; });
+    rivalTrackerList.innerHTML = sorted.map(function(s){
+      var personality = getPersonality(s);
+      return '<div class="mini-row"><div class="mini-row-top"><strong>'+escapeHtml(s.name)+'</strong><span class="mini-tag">'+escapeHtml(personality.label)+'</span></div>'+
+        '<div class="mini-row-stats"><span class="'+(s.cash<0?'neg':'')+'">'+formatMoney(s.cash)+'</span><span>Prestige '+Math.round(s.prestige)+'</span></div></div>';
+    }).join('');
+  }
+
+export function renderRecentReleases(){
+    if(!recentReleasesList) return;
+    var recent = player.moviesAll.slice(-5).reverse();
+    if(recent.length===0){
+      recentReleasesList.innerHTML = '<p class="hint">Nothing released yet.</p>';
+      return;
+    }
+    recentReleasesList.innerHTML = recent.map(function(m){
+      return '<div class="mini-row"><div class="mini-row-top"><strong>'+escapeHtml(m.title)+'</strong><span class="badge badge-'+m.verdictCls+'">'+m.verdict+'</span></div>'+
+        '<div class="mini-row-stats"><span>'+m.genre+'</span><span class="'+(m.profit>=0?'pos':'neg')+'">'+formatMoney(m.profit)+'</span></div></div>';
     }).join('');
   }
 
@@ -130,6 +158,30 @@ export function populateTalentSelects(){
     fillSelect(star2Select, stars, function(t){ return t.name+' — Star Power '+t.starPower+' — '+formatMoney(starFee(t))+dealTag(t); });
   }
 
+// Rebuilt every time the SFX budget ceiling changes, not once at studio founding like
+// the roster dropdowns above — availability here genuinely depends on the current
+// slider value, not a static list.
+export function populateSfxHouseSelect(){
+    var ceiling = Number(sfxRange.value);
+    var prevVal = sfxHouseSelect.value;
+    var options = [{ h: PRACTICAL_EFFECTS, qualifies: true }].concat(
+      sfxHouses.map(function(h){ return { h: h, qualifies: sfxHouseFee(h) <= ceiling }; })
+    );
+    sfxHouseSelect.innerHTML = options.map(function(o){
+      var fee = sfxHouseFee(o.h);
+      var label = o.qualifies ?
+        (o.h.name+' — Skill '+o.h.skill+' — '+formatMoney(fee)) :
+        (o.h.name+' — Declines (needs '+formatMoney(fee)+')');
+      return '<option value="'+o.h.id+'"'+(o.qualifies?'':' disabled')+'>'+escapeHtml(label)+'</option>';
+    }).join('');
+    var stillQualifies = options.some(function(o){ return o.h.id===prevVal && o.qualifies; });
+    sfxHouseSelect.value = stillQualifies ? prevVal : PRACTICAL_EFFECTS.id;
+    var chosen = getSfxHouseById(sfxHouseSelect.value);
+    sfxHouseDescText.textContent = chosen.isPractical ?
+      'No outside house — cheap and always available, but the weakest effects work on the market.' :
+      'Fee '+formatMoney(sfxHouseFee(chosen))+' at Skill '+chosen.skill+', Prestige '+Math.round(chosen.prestige)+'.';
+  }
+
 export function getSelectedTalent(){
     var w = writers.filter(function(t){ return t.id===writerSelect.value; })[0];
     var d = directors.filter(function(t){ return t.id===directorSelect.value; })[0];
@@ -137,7 +189,8 @@ export function getSelectedTalent(){
     var c = getComposerById(composerSelect.value);
     var s1 = stars.filter(function(t){ return t.id===star1Select.value; })[0];
     var s2 = stars.filter(function(t){ return t.id===star2Select.value; })[0];
-    return {w:w, d:d, p:p, c:c, s1:s1, s2:s2};
+    var x = getSfxHouseById(sfxHouseSelect.value);
+    return {w:w, d:d, p:p, c:c, s1:s1, s2:s2, x:x};
   }
 
 export function renderPropertyPreview(){
@@ -189,23 +242,31 @@ export function renderCalendarPreview(){
 
 export function renderBudgetSummary(){
     var sel = getSelectedTalent();
-    var sfx = Number(sfxRange.value);
+    var sfxCeiling = Number(sfxRange.value);
     var mkt = Number(marketingRange.value);
-    sfxValue.textContent = formatMoney(sfx);
+    sfxValue.textContent = formatMoney(sfxCeiling);
     marketingValue.textContent = formatMoney(mkt);
     theaterValue.textContent = Number(theaterRange.value).toLocaleString()+' screens';
     var strategyForDesc = RELEASE_STRATEGIES.filter(function(s){ return s.id===strategySelect.value; })[0];
     if(strategyForDesc) strategyDescText.textContent = strategyForDesc.desc;
     renderCalendarPreview();
     renderPropertyPreview();
+    populateSfxHouseSelect();
 
     if(!sel.w || !sel.d || !sel.p || !sel.c || !sel.s1 || !sel.s2){ return; }
+    var x = getSfxHouseById(sfxHouseSelect.value);
+    var sfx = sfxHouseFee(x);
 
     var wf = writerFee(sel.w), df = directorFee(sel.d), pf = producerFee(sel.p), cf = composerFee(sel.c), s1f = starFee(sel.s1), s2f = starFee(sel.s2);
-    var talentSubtotal = wf+df+cf+s1f+s2f;
+    wf = Math.round(wf*(1-getNegotiatedDiscount('writer', sel)));
+    df = Math.round(df*(1-getNegotiatedDiscount('director', sel)));
+    cf = Math.round(cf*(1-getNegotiatedDiscount('composer', sel)));
+    s1f = Math.round(s1f*(1-getNegotiatedDiscount('star1', sel)));
+    s2f = Math.round(s2f*(1-getNegotiatedDiscount('star2', sel)));
+    var talentSubtotal = wf+df+cf+s1f+s2f+sfx;
     var discountRate = sel.p.isSelf ? 0 : producerFeeDiscount(sel.p);
     var discountAmt = Math.round(talentSubtotal*discountRate);
-    var total = talentSubtotal-discountAmt+pf+sfx+mkt;
+    var total = talentSubtotal-discountAmt+pf+mkt;
     budgetSummaryBody.innerHTML =
       '<div class="budget-line"><span>Writer — '+escapeHtml(sel.w.name)+'</span><span>'+formatMoney(wf)+'</span></div>'+
       '<div class="budget-line"><span>Director — '+escapeHtml(sel.d.name)+'</span><span>'+formatMoney(df)+'</span></div>'+
@@ -214,7 +275,7 @@ export function renderBudgetSummary(){
       '<div class="budget-line"><span>Lead — '+escapeHtml(sel.s2.name)+'</span><span>'+formatMoney(s2f)+'</span></div>'+
       (discountAmt>0 ? '<div class="budget-line"><span>Producer Efficiency — '+escapeHtml(sel.p.name)+'</span><span style="color:var(--emerald);">-'+formatMoney(discountAmt)+'</span></div>' : '')+
       '<div class="budget-line"><span>'+(sel.p.isSelf?'Producing (Self)':'Producer')+' — '+escapeHtml(sel.p.name)+'</span><span>'+formatMoney(pf)+'</span></div>'+
-      '<div class="budget-line"><span>Special Effects</span><span>'+formatMoney(sfx)+'</span></div>'+
+      '<div class="budget-line"><span>'+(x.isPractical?'Effects (In-House)':'SFX House')+' — '+escapeHtml(x.name)+'</span><span>'+formatMoney(sfx)+'</span></div>'+
       '<div class="budget-line"><span>Marketing</span><span>'+formatMoney(mkt)+'</span></div>'+
       '<div class="budget-line total"><span>TOTAL BUDGET</span><span>'+formatMoney(total)+'</span></div>'+
       '<div class="budget-line remaining"><span>Cash After Release</span><span style="color:'+((player.cash-total)<0?'var(--crimson)':'var(--emerald)')+'">'+formatMoney(player.cash-total)+'</span></div>';
@@ -233,20 +294,25 @@ export function renderBudgetSummary(){
 // both always agree — one calculation, two presentations.
 export function computeGreenlightPreview(){
     var sel = getSelectedTalent();
-    var sfx = Number(sfxRange.value);
+    var sfx = sfxHouseFee(sel.x);
     var mkt = Number(marketingRange.value);
     var genre = genreSelect.value;
     var channels = 2; // a reasonable mid-estimate; exact channel count barely moves this preview
 
     var wf = writerFee(sel.w), df = directorFee(sel.d), pf = producerFee(sel.p), cf = composerFee(sel.c), s1f = starFee(sel.s1), s2f = starFee(sel.s2);
-    var talentSubtotal = wf+df+cf+s1f+s2f;
+    wf = Math.round(wf*(1-getNegotiatedDiscount('writer', sel)));
+    df = Math.round(df*(1-getNegotiatedDiscount('director', sel)));
+    cf = Math.round(cf*(1-getNegotiatedDiscount('composer', sel)));
+    s1f = Math.round(s1f*(1-getNegotiatedDiscount('star1', sel)));
+    s2f = Math.round(s2f*(1-getNegotiatedDiscount('star2', sel)));
+    var talentSubtotal = wf+df+cf+s1f+s2f+sfx;
     var discountRate = sel.p.isSelf ? 0 : producerFeeDiscount(sel.p);
     var discountAmt = Math.round(talentSubtotal*discountRate);
-    var total = talentSubtotal-discountAmt+pf+sfx+mkt;
+    var total = talentSubtotal-discountAmt+pf+mkt;
 
     // Deterministic estimate — same formulas the real production uses, minus their small
     // random noise terms, so this reads as "roughly what to expect," not a guarantee.
-    var qEst = computeQuality(sel.w.skill, sel.d.skill, sfx, mkt, genre, sel.s1.starPower, sel.s2.starPower);
+    var qEst = computeQuality(sel.w.skill, sel.d.skill, sfx, mkt, genre, sel.s1.starPower, sel.s2.starPower, sel.x.skill);
     var hEst = computeHype(mkt, sel.s1.starPower, sel.s2.starPower, channels);
     var theaters = Number(theaterRange.value);
     var perScreen = 5000*(hEst/50);
@@ -585,6 +651,8 @@ export function renderAll(){
     renderPrestigeMeter();
     renderStudioOffice();
     renderCompetitors();
+    renderRivalTracker();
+    renderRecentReleases();
     renderHistory();
     renderBudgetSummary();
     renderNews();

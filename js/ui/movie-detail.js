@@ -15,6 +15,7 @@ export function showMovieDetail(movie){
     { role:'Director', name:movie.director.name, prestige:prestigeOf(movie,'director',movie.director) },
     { role:'Producer', name:movie.producerName, prestige:movie.producerIsSelf?null:prestigeOf(movie,'producer',movie.producerRef) },
     { role:'Composer', name:movie.composerName, prestige:movie.composerIsLibrary?null:prestigeOf(movie,'composer',movie.composerRef) },
+    { role:'SFX House', name:movie.sfxHouseName, prestige:movie.sfxHouseIsPractical?null:prestigeOf(movie,'sfxHouse',movie.sfxHouseRef) },
     { role:'Lead', name:movie.star1.name, prestige:prestigeOf(movie,'star1',movie.star1) },
     { role:'Lead', name:movie.star2.name, prestige:prestigeOf(movie,'star2',movie.star2) }
   ].map(function(c){

@@ -1,4 +1,4 @@
-import { STUDIO_TIERS, bumpUidCounter, clamp, composers, directors, findTier, producers, rand, setTalentRosters, stars, uidCounter, writers } from '../data/constants.js';
+import { STUDIO_TIERS, bumpUidCounter, clamp, composers, directors, findTier, producers, rand, setTalentRosters, sfxHouses, stars, uidCounter, writers } from '../data/constants.js';
 import { freshGenreDemand, genreDemand, prevGenreDemand, recentReleases, resetGenreDemandForNewStudio, setGenreDemandFromSave, yearOf } from '../systems/market.js';
 import { PERSONALITY_KEYS } from '../systems/rival-personalities.js';
 import { saveStatusLine, synopsisInput, synopsisWordCount } from '../ui/dom-refs.js';
@@ -71,6 +71,7 @@ export function serializeGame(){
       stars: stars,
       composers: composers,
       producers: producers,
+      sfxHouses: sfxHouses,
       finance: finance,
       genreDemand: genreDemand,
       prevGenreDemand: prevGenreDemand,
@@ -91,6 +92,7 @@ export function relinkMovieTalent(movies){
         m.star2 = stars.filter(function(s){ return s.id===m.star2.id; })[0] || m.star2;
         if(m.composerRef){ m.composerRef = composers.filter(function(c){ return c.id===m.composerRef.id; })[0] || m.composerRef; }
         if(m.producerRef){ m.producerRef = producers.filter(function(p){ return p.id===m.producerRef.id; })[0] || m.producerRef; }
+        if(m.sfxHouseRef){ m.sfxHouseRef = sfxHouses.filter(function(x){ return x.id===m.sfxHouseRef.id; })[0] || m.sfxHouseRef; }
       }
     });
   }
@@ -100,7 +102,7 @@ export function restoreGame(data){
     player = data.player;
     player.awardsWon = player.awardsWon || [];
     aiStudios = data.aiStudios;
-    setTalentRosters(data.writers, data.directors, data.stars, data.composers, data.producers);
+    setTalentRosters(data.writers, data.directors, data.stars, data.composers, data.producers, data.sfxHouses);
     finance = data.finance || freshFinance();
     setGenreDemandFromSave(data.genreDemand || freshGenreDemand(), data.prevGenreDemand || {}, data.recentReleases || []);
     game.processedWeek = data.game.processedWeek;
