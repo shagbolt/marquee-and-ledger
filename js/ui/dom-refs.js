@@ -307,6 +307,10 @@ export var fastForwardBtn = $('fastForwardBtn');
 
 export var newsFeedList = $('newsFeedList');
 
+export var boxOfficeYourRelease = $('boxOfficeYourRelease');
+export var boxOfficeIndustryList = $('boxOfficeIndustryList');
+export var genreTrackerList = $('genreTrackerList');
+
 export var historyTableBody = $('historyTableBody');
 
 export var greenlightModal = $('greenlightModal');

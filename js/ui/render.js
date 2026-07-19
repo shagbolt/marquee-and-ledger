@@ -11,7 +11,7 @@ import { renderObjectiveCard } from './objective.js';
 import { getPersonality } from '../systems/rival-personalities.js';
 import { getNegotiatedDiscount } from './wizard.js';
 import { showMovieDetail } from './movie-detail.js';
-import { activeLoansList, awardsCampaignGateHint, awardsCampaignList, awardsHistoryTableBody, budgetSummaryBody, calendarPreview, cashDisplay, competitorsTableBody, composerSelect, demographicSelect, departmentsGrid, directorSelect, greenlightBody, greenlightModal, distributionTableBody, internationalTabLock, researchTabLock, rivalTrackerList, recentReleasesList, equityGateHint, festivalDescText, festivalSelect, formWarning, franchiseList, genreDemandTableBody, genreSelect, goPublicBtn, historyTableBody, industryReportBody, internationalLockedBanner, investorConfidenceDisplay, investorTermsDisplay, ipoGateHint, ipoYearDisplay, loanAmountRange, loanAmountValue, loanMaxDisplay, loanRateDisplay, marketingCurrentStats, marketingRange, marketingValue, movieTitleInput, newsFeedList, passiveIncomeBody, preprodPanel, prestigeBarFill, producerSelect, prestigeDisplay, prestigeHistoryList, prestigeMeterPointer, prestigeMeterValue, prestigeTierLabel, profitShareDealsList, propertyFitText, publicCompanyStatus, rankDisplay, ratingSelect, releaseBtn, researchContent, researchLockedBanner, researchLockedHint, revoltCountDisplay, rewriteOptionsList, runtimeRange, runtimeValueText, scheduleRange, scheduleValueText, scriptDevPanel, scriptReportBlock, scriptReportBody, sfxHouseDescText, sfxHouseSelect, sfxRange, sfxValue, slotReportBody, star1Select, star2Select, strategyDescText, strategySelect, studioBioBody, studioDataPanel, studioNameInput, studioRumorsBody, studioTierLine, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, theaterValue, timeControls, weekYearDisplay, writerSelect, yearInReviewText } from './dom-refs.js';
+import { activeLoansList, awardsCampaignGateHint, awardsCampaignList, awardsHistoryTableBody, boxOfficeIndustryList, boxOfficeYourRelease, budgetSummaryBody, calendarPreview, cashDisplay, competitorsTableBody, composerSelect, demographicSelect, departmentsGrid, directorSelect, genreTrackerList, greenlightBody, greenlightModal, distributionTableBody, internationalTabLock, researchTabLock, rivalTrackerList, recentReleasesList, equityGateHint, festivalDescText, festivalSelect, formWarning, franchiseList, genreDemandTableBody, genreSelect, goPublicBtn, historyTableBody, industryReportBody, internationalLockedBanner, investorConfidenceDisplay, investorTermsDisplay, ipoGateHint, ipoYearDisplay, loanAmountRange, loanAmountValue, loanMaxDisplay, loanRateDisplay, marketingCurrentStats, marketingRange, marketingValue, movieTitleInput, newsFeedList, passiveIncomeBody, preprodPanel, prestigeBarFill, producerSelect, prestigeDisplay, prestigeHistoryList, prestigeMeterPointer, prestigeMeterValue, prestigeTierLabel, profitShareDealsList, propertyFitText, publicCompanyStatus, rankDisplay, ratingSelect, releaseBtn, researchContent, researchLockedBanner, researchLockedHint, revoltCountDisplay, rewriteOptionsList, runtimeRange, runtimeValueText, scheduleRange, scheduleValueText, scriptDevPanel, scriptReportBlock, scriptReportBody, sfxHouseDescText, sfxHouseSelect, sfxRange, sfxValue, slotReportBody, star1Select, star2Select, strategyDescText, strategySelect, studioBioBody, studioDataPanel, studioNameInput, studioRumorsBody, studioTierLine, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, theaterValue, timeControls, weekYearDisplay, writerSelect, yearInReviewText } from './dom-refs.js';
 
 export function computePlayerRank(){
     var ranked = [{name:player.name, prestige:player.prestige, isPlayer:true}];
@@ -86,6 +86,67 @@ export function renderRecentReleases(){
     recentReleasesList.innerHTML = recent.map(function(m){
       return '<div class="mini-row"><div class="mini-row-top"><strong>'+escapeHtml(m.title)+'</strong><span class="badge badge-'+m.verdictCls+'">'+m.verdict+'</span></div>'+
         '<div class="mini-row-stats"><span>'+m.genre+'</span><span class="'+(m.profit>=0?'pos':'neg')+'">'+formatMoney(m.profit)+'</span></div></div>';
+    }).join('');
+  }
+
+// Left sidebar, always visible — a compact "who's in theaters" board. Your own run
+// is a genuine week-by-week live figure (game.currentRun); rival pictures resolve
+// their entire theatrical run in one shot the moment they're greenlit (see
+// generateAIMovie), so there's no live weekly number to show for them — instead this
+// lists their settled total gross alongside how many weeks it's been since they opened,
+// which is an honest read of "recently released and how it did," not a live ticker.
+export function renderBoxOfficeBoard(){
+    if(!boxOfficeYourRelease) return;
+    var run = game.currentRun;
+    if(run){
+      var movie = run.movie;
+      if(run.weekIndex===0){
+        boxOfficeYourRelease.innerHTML = '<div class="bo-your-card"><div class="bo-your-top"><strong>'+escapeHtml(movie.title)+'</strong><span class="mini-tag">'+escapeHtml(movie.genre)+'</span></div>'+
+          '<div class="bo-your-stats"><span>🎬 Opens this week</span></div></div>';
+      } else {
+        boxOfficeYourRelease.innerHTML = '<div class="bo-your-card"><div class="bo-your-top"><strong>'+escapeHtml(movie.title)+'</strong><span class="mini-tag">'+escapeHtml(movie.genre)+'</span></div>'+
+          '<div class="bo-your-stats"><span>Week '+run.weekIndex+'</span><span>'+run.prevTheaters.toLocaleString()+' screens</span><span class="pos">'+formatMoney(run.cumulative)+'</span></div></div>';
+      }
+    } else {
+      boxOfficeYourRelease.innerHTML = '<p class="hint bo-empty">Nothing currently in your theaters.</p>';
+    }
+
+    var openings = [];
+    aiStudios.forEach(function(s){
+      s.moviesAll.forEach(function(m){
+        var weeksOut = game.processedWeek-m.releaseWeek;
+        if(weeksOut>=0 && weeksOut<=8){ openings.push({ movie:m, studio:s, weeksOut:weeksOut }); }
+      });
+    });
+    openings.sort(function(a,b){ return a.weeksOut-b.weeksOut; });
+    openings = openings.slice(0,5);
+    if(!boxOfficeIndustryList) return;
+    if(openings.length===0){
+      boxOfficeIndustryList.innerHTML = '<p class="hint bo-empty">No rival openings in the past 8 weeks.</p>';
+    } else {
+      boxOfficeIndustryList.innerHTML = openings.map(function(o){
+        var m = o.movie;
+        var wkLabel = o.weeksOut===0 ? 'Opening wk' : 'Wk '+o.weeksOut;
+        return '<div class="bo-row"><div class="bo-row-top"><strong>'+escapeHtml(m.title)+'</strong><span class="mini-tag">'+escapeHtml(o.studio.name)+'</span></div>'+
+          '<div class="bo-row-stats"><span>'+m.genre+'</span><span>'+wkLabel+'</span><span>'+formatMoney(m.totalBoxOffice)+'</span></div></div>';
+      }).join('');
+    }
+  }
+
+// Same demand/saturation numbers the Research tab uses, condensed into a chart the
+// player can glance at from any tab — the demand bar shows how hot a genre is, and the
+// marker on top of it shows where saturation currently sits on that same 0-100 scale.
+export function renderGenreTracker(){
+    if(!genreTrackerList) return;
+    genreTrackerList.innerHTML = GENRES.map(function(g){
+      var demand = genreDemand[g];
+      var prev = prevGenreDemand[g]!=null ? prevGenreDemand[g] : demand;
+      var trendArrow = demand>prev+3 ? '📈' : demand<prev-3 ? '📉' : '➖';
+      var saturation = getSaturation(g);
+      var rec = genreRecommendation(demand, saturation);
+      return '<div class="genre-track-row"><div class="genre-track-top"><span class="genre-track-name">'+g+'</span><span class="divergence-tag '+rec.cls+'">'+rec.label+'</span></div>'+
+        '<div class="genre-track-bar-wrap"><div class="genre-track-bar" style="width:'+demand+'%;"></div><div class="genre-track-sat-marker" style="left:'+saturation+'%;"></div></div>'+
+        '<div class="genre-track-meta"><span>Demand '+demand+' '+trendArrow+'</span><span>Saturation '+saturation+'</span></div></div>';
     }).join('');
   }
 
@@ -653,6 +714,8 @@ export function renderAll(){
     renderCompetitors();
     renderRivalTracker();
     renderRecentReleases();
+    renderBoxOfficeBoard();
+    renderGenreTracker();
     renderHistory();
     renderBudgetSummary();
     renderNews();
