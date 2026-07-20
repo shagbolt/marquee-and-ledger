@@ -15,6 +15,7 @@ import { addNews, getSelectedTalent, populateTalentSelects, renderAll, renderCom
 import { renderObjectiveCard } from '../ui/objective.js';
 import { goToStep, getNegotiatedDiscount, resetNegotiation } from '../ui/wizard.js';
 import { renderDecisionCard, renderDecisionOutcome } from '../ui/decision-card.js';
+import { tutorialOnBoxOfficeFirstWeek, tutorialOnProductionEvent, tutorialOnTestScreening } from '../ui/tutorial.js';
 
 export function openGreenlightReview(){
     var sel = getSelectedTalent();
@@ -147,6 +148,7 @@ export function openProductionEvent(movie){
     var evt = PRODUCTION_EVENTS[randInt(0, PRODUCTION_EVENTS.length-1)];
     game.pendingEvent = evt;
     renderDecisionCard('⚡ URGENT PRODUCTION DECISION', evt, movie);
+    tutorialOnProductionEvent();
     var btns = eventBody.querySelectorAll('.decision-choice-btn');
     btns.forEach(function(btn){
       btn.addEventListener('click', function(){
@@ -508,6 +510,7 @@ export function openTestScreening(movie){
     renderTestScreeningModal(movie, feedback);
     testScreeningModal.classList.remove('hidden');
     renderObjectiveCard();
+    tutorialOnTestScreening();
   }
 
 export function renderTestScreeningModal(movie, feedback){
@@ -755,6 +758,7 @@ export function processNextWeek(){
     checkAwards();
 
     appendTickerRow({week: run.weekIndex, theaters: theaters, weeklyGross: weeklyGross, cumulative: run.cumulative, note: note});
+    if(run.weekIndex===1){ tutorialOnBoxOfficeFirstWeek(); }
     renderNowShowingBadges(movie);
     renderCompetitors();
     renderNews();

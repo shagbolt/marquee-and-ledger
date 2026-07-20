@@ -10,6 +10,7 @@ import { applyPrestigeDelta, commercialPrestigeComponent, logPrestigeChange, rev
 import { awardsBody, awardsModal, awardsYearLabel, finaleBody, finaleModal, finaleTitle, finalizeStreamingBtn, internationalMarketsList, internationalModal, internationalSummaryLine, intlTotalCostDisplay, platformDescription, streamingModal, streamingPlatformSelect, streamingPreviewAmount, streamingTheatricalSummary, streamingWindowSelect, summaryBody, summaryModal, $ } from '../ui/dom-refs.js';
 import { computePlayerRank } from '../ui/render.js';
 import { getSeasonGoalLabel } from '../systems/season-goals.js';
+import { tutorialOnSettlementReceipt } from '../ui/tutorial.js';
 import { animateMoneyCounter, generateCausalExplanation } from '../ui/reveal.js';
 import { addNews, populateTalentSelects, renderAll, setFormDisabled } from '../ui/render.js';
 
@@ -387,6 +388,7 @@ export function showSummaryModal(movie, prestigeBefore, rankBefore){
       '<p class="studio-prestige-note">Studio Prestige moved '+studioSign+movie.studioPrestigeDelta+' (Commercial '+sbSignC+b.studio.commercial+' • Reviews '+sbSignR+b.studio.review+') → now <strong>'+Math.round(player.prestige)+'</strong>. Cash on hand: <strong>'+formatMoney(player.cash)+'</strong>.</p>';
     summaryModal.classList.remove('hidden');
     animateMoneyCounter($('revealProfitCounter'), movie.profit);
+    tutorialOnSettlementReceipt();
   }
 
 export function showFinaleModal(finale){

@@ -4,6 +4,7 @@ import { RELEASE_STRATEGIES } from '../systems/release-strategy.js';
 import { weekInYearOf, yearOf } from '../systems/market.js';
 import { genreSelect, movieCardCast, movieCardMeta, movieCardQH, movieCardRiskLabel, movieCardRows, movieCardTitle, movieTaglineInput, movieTitleInput, moviePoster, moviePosterTitle, negotiateBtn, negotiateResult, ratingSelect, riskMarker, scheduleRange, strategySelect, wizardStepDots, wizardStepPanels } from './dom-refs.js';
 import { computeGreenlightPreview, getSelectedTalent } from './render.js';
+import { tutorialOnWizardStep } from './tutorial.js';
 
 export function goToStep(n){
   wizardStepDots.forEach(function(d){
@@ -14,6 +15,7 @@ export function goToStep(n){
   wizardStepPanels.forEach(function(p){
     p.classList.toggle('active', Number(p.getAttribute('data-step'))===n);
   });
+  tutorialOnWizardStep(n);
 }
 
 function initials(name){

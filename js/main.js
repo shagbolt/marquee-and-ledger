@@ -14,11 +14,13 @@ import { analyzeScriptBtn, awardsCloseBtn, awardsModal, backToLaunchChoiceBtn, c
 import { addNews, populateTalentSelects, renderAll, renderBudgetSummary, renderScriptReport } from './ui/render.js';
 import { renderTalentTab } from './ui/talent-tab.js';
 import { goToStep, renderMovieCard, runNegotiation } from './ui/wizard.js';
+import { initTutorialToggle, tutorialCheckUnlocks, tutorialOnStudioFounded, tutorialOnTabShown } from './ui/tutorial.js';
 
 function showTab(tabId){
     tabBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tab')===tabId); });
     tabPanels.forEach(function(p){ p.classList.toggle('active', p.id==='tab-'+tabId); });
     renderAll();
+    tutorialOnTabShown(tabId);
   }
 
 function showDestination(dest){
@@ -202,6 +204,7 @@ summaryCloseBtn.addEventListener('click', function(){
     nowShowingContent.classList.add('hidden');
     renderAll();
     maybeShowNextAward();
+    tutorialCheckUnlocks(player);
   });
 
 awardsCloseBtn.addEventListener('click', function(){
@@ -323,12 +326,14 @@ foundStudioBtn.addEventListener('click', function(){
     applyStarterDefaults();
     renderAll();
     addNews('🎥 '+escapeHtml(player.name)+' opens its doors as a '+tier.name+'. Good luck, mogul.');
+    tutorialOnStudioFounded();
   });
 
 continueSavedGameBtn.addEventListener('click', function(){
     loadGameFromLocalStorage();
     applyStarterDefaults();
     studioCreationModal.classList.add('hidden');
+    tutorialCheckUnlocks(player);
   });
 
 saveGameBtn.addEventListener('click', saveGameToLocalStorage);
@@ -381,6 +386,7 @@ export function setDefaultSelect(selectEl, value){
 
 export function init(){
     loadSavedTheme();
+    initTutorialToggle();
     try{
       beginStudioCreationScreen();
     }catch(err){
