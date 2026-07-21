@@ -56,6 +56,7 @@
   <!-- ===================== MASTHEAD ===================== -->
   <header class="masthead">
     <div class="brand">
+      <div id="studioLogoDisplay" class="studio-logo-display"></div>
       <h1>🎬 Marquee &amp; Ledger</h1>
       <div>
         <span class="eyebrow">Hollywood Studio Tycoon — Trade Daily</span><br>
@@ -311,7 +312,7 @@
           </div>
 
           <div class="movie-card-preview">
-            <div class="movie-poster" id="moviePoster"><span id="moviePosterTitle">UNTITLED<br>PICTURE</span></div>
+            <div class="movie-poster" id="moviePoster"><div class="poster-genre-badge" id="moviePosterBadge"></div><span id="moviePosterTitle">UNTITLED<br>PICTURE</span></div>
             <div class="movie-card-info">
               <div class="movie-card-title" id="movieCardTitle">Untitled Picture</div>
               <div class="movie-card-meta" id="movieCardMeta">Action · PG-13</div>
@@ -621,6 +622,24 @@
           <p class="hint">Departments unlock as your studio grows. Locked ones show what it takes to open their doors.</p>
           <div id="departmentsGrid" class="departments-grid"></div>
         </section>
+        <section class="panel hidden" id="legalDeptPanel">
+          <h2>⚖️ Legal Department</h2>
+          <p class="hint">In-house counsel is always on staff once this department unlocks — no hire, no standing cost. It handles every case automatically; the only decision is whether a specific case is worth paying an outside firm for.</p>
+          <div class="legal-inhouse-row">
+            <div>
+              <div class="legal-inhouse-title">In-House Counsel</div>
+              <div class="legal-inhouse-sub">Always staffed, no cost to maintain — handles every case at standard terms.</div>
+            </div>
+            <div class="legal-inhouse-status">● ON STAFF</div>
+          </div>
+          <div class="legal-risk-block">
+            <div class="legal-risk-top"><span>Legal Risk</span><span id="legalRiskLabel">Minimal · 0/100</span></div>
+            <div class="legal-risk-bar-wrap"><div class="legal-risk-bar" id="legalRiskBar" style="width:0%;"></div></div>
+            <div class="legal-risk-hint">Rises after a Bomb verdict or a rejected International market. Decays slowly on its own between cases.</div>
+          </div>
+          <div class="legal-case-log-title">Case Log</div>
+          <div id="legalCaseLog"></div>
+        </section>
         <section class="panel">
           <h2>📋 Studio Bio</h2>
           <div id="studioBioBody"></div>
@@ -702,6 +721,8 @@
       <input type="text" id="newStudioNameInput" placeholder="e.g. Lighthouse Pictures" maxlength="30">
       <label style="color:var(--ink-dim);">Choose Your Starting Tier</label>
       <div id="tierOptionsList"></div>
+      <label style="color:var(--ink-dim);">Choose Your Studio Logo</label>
+      <div id="logoOptionsList" class="logo-options-grid"></div>
       <button class="btn-primary" id="foundStudioBtn">Found Studio</button>
       <button class="btn-secondary hidden" id="backToLaunchChoiceBtn" style="width:100%;margin-top:8px;">← Back</button>
     </div>

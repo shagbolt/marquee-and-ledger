@@ -25,16 +25,29 @@ export function uid(){ return 'm'+(uidCounter++); }
 
 export var GENRES = ['Action','Animation','Comedy','Drama','Horror','Sci-Fi'];
 
-// Shared between the Greenlight wizard's movie-card poster and the History tab's
-// poster thumbnails — one visual identity per genre, not two places defining it.
-export var GENRE_GRADIENTS = {
-  'Action': 'linear-gradient(160deg, #4a1810, #200a05)',
-  'Animation': 'linear-gradient(160deg, #1a4a3a, #0a1f18)',
-  'Comedy': 'linear-gradient(160deg, #4a3a10, #201808)',
-  'Drama': 'linear-gradient(160deg, #1a2a4a, #0a1220)',
-  'Horror': 'linear-gradient(160deg, #2a0a0a, #0a0202)',
-  'Sci-Fi': 'linear-gradient(160deg, #10304a, #051220)'
+// Single source of truth for genre color identity — the poster gradient (below),
+// the app-icon-style genre badge (js/ui/genre-badges.js), the Genre Tracker, and
+// the History thumbnails all draw from these same three stops per genre, so a
+// lightening or re-tint only ever needs to happen in one place.
+export var GENRE_COLORS = {
+  'Action':    { light:'#e8b184', mid:'#c9752f', dark:'#7a3f18' },
+  'Animation': { light:'#8fe0c2', mid:'#3f9c78', dark:'#1f4a38' },
+  'Comedy':    { light:'#cdb0e8', mid:'#8a5fc2', dark:'#4a2f80' },
+  'Drama':     { light:'#e8a8ae', mid:'#b0424a', dark:'#601820' },
+  'Horror':    { light:'#4a3540', mid:'#241a26', dark:'#0a060c' },
+  'Sci-Fi':    { light:'#a8e4e8', mid:'#4fb8c2', dark:'#1e6b76' }
 };
+
+// Brighter, more premium-feeling poster gradients — the old set was a single dark
+// tone per genre (near-black for everything) which read as a flat slab, especially
+// in light theme where nothing separated it from the page. Same GENRES keys, so
+// every existing consumer (wizard preview, movie-detail modal, History thumbnails)
+// picks this up automatically.
+export var GENRE_GRADIENTS = {};
+GENRES.forEach(function(g){
+  var c = GENRE_COLORS[g];
+  GENRE_GRADIENTS[g] = 'linear-gradient(160deg, '+c.light+', '+c.mid+' 55%, '+c.dark+')';
+});
 
 export var GENRE_SFX_IDEAL = { 'Action':0.65, 'Sci-Fi':0.7, 'Horror':0.45, 'Comedy':0.2, 'Drama':0.15, 'Animation':0.6 };
 

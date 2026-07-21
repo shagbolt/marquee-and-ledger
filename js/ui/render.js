@@ -5,13 +5,16 @@ import { FRANCHISE_EXTENSIONS, computeFranchiseValue, developFranchiseProduction
 import { buildYearInReviewText, computeIndustryReport, genreDemand, genreRecommendation, getSaturation, investorTerms, ipoEligible, loanInterestRate, maxLoanAmount, prevGenreDemand, studioRecentFocus, weekInYearOf, yearOf } from '../systems/market.js';
 import { RELEASE_STRATEGIES, REWRITE_OPTIONS, checkTimingMatch, holidayName, isAwardsSeasonWeek, isSummerWeek, scaledCost } from '../systems/release-strategy.js';
 import { DEPARTMENTS, awardsCampaignEligibleMovies, awardsCampaignUnlocked, launchAwardsCampaign } from '../systems/studio-management.js';
+import { ensureLegalState, legalDeptUnlocked, legalRiskTierLabel } from '../systems/legal.js';
+import { genreBadgeSVG } from './genre-badges.js';
+import { studioLogoSVG } from './studio-logo.js';
 import { computeHype, computeQuality, prestigeTier } from '../systems/talent-quality.js';
 import { renderTalentTab } from './talent-tab.js';
 import { renderObjectiveCard } from './objective.js';
 import { getPersonality } from '../systems/rival-personalities.js';
 import { getNegotiatedDiscount } from './wizard.js';
 import { showMovieDetail } from './movie-detail.js';
-import { activeLoansList, awardsCampaignGateHint, awardsCampaignList, awardsHistoryTableBody, boxOfficeIndustryList, boxOfficeYourRelease, budgetSummaryBody, calendarPreview, cashDisplay, competitorsTableBody, composerSelect, demographicSelect, departmentsGrid, directorSelect, genreTrackerList, greenlightBody, greenlightModal, distributionTableBody, internationalTabLock, researchTabLock, rivalTrackerList, recentReleasesList, equityGateHint, festivalDescText, festivalSelect, formWarning, franchiseList, genreDemandTableBody, genreSelect, goPublicBtn, historyTableBody, industryReportBody, internationalLockedBanner, investorConfidenceDisplay, investorTermsDisplay, ipoGateHint, ipoYearDisplay, loanAmountRange, loanAmountValue, loanMaxDisplay, loanRateDisplay, marketingCurrentStats, marketingRange, marketingValue, movieTitleInput, newsFeedList, passiveIncomeBody, preprodPanel, prestigeBarFill, producerSelect, prestigeDisplay, prestigeHistoryList, prestigeMeterPointer, prestigeMeterValue, prestigeTierLabel, profitShareDealsList, propertyFitText, publicCompanyStatus, rankDisplay, ratingSelect, releaseBtn, researchContent, researchLockedBanner, researchLockedHint, revoltCountDisplay, rewriteOptionsList, runtimeRange, runtimeValueText, scheduleRange, scheduleValueText, scriptDevPanel, scriptReportBlock, scriptReportBody, sfxHouseDescText, sfxHouseSelect, sfxRange, sfxValue, slotReportBody, star1Select, star2Select, strategyDescText, strategySelect, studioBioBody, studioDataPanel, studioNameInput, studioRumorsBody, studioTierLine, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, theaterValue, timeControls, weekYearDisplay, writerSelect, yearInReviewText } from './dom-refs.js';
+import { legalCaseLog, legalDeptPanel, legalRiskBar, legalRiskLabel, activeLoansList, awardsCampaignGateHint, awardsCampaignList, awardsHistoryTableBody, boxOfficeIndustryList, boxOfficeYourRelease, budgetSummaryBody, calendarPreview, cashDisplay, competitorsTableBody, composerSelect, demographicSelect, departmentsGrid, directorSelect, genreTrackerList, greenlightBody, greenlightModal, distributionTableBody, internationalTabLock, researchTabLock, rivalTrackerList, recentReleasesList, equityGateHint, festivalDescText, festivalSelect, formWarning, franchiseList, genreDemandTableBody, genreSelect, goPublicBtn, historyTableBody, industryReportBody, internationalLockedBanner, investorConfidenceDisplay, investorTermsDisplay, ipoGateHint, ipoYearDisplay, loanAmountRange, loanAmountValue, loanMaxDisplay, loanRateDisplay, marketingCurrentStats, marketingRange, marketingValue, movieTitleInput, newsFeedList, passiveIncomeBody, preprodPanel, prestigeBarFill, producerSelect, prestigeDisplay, prestigeHistoryList, prestigeMeterPointer, prestigeMeterValue, prestigeTierLabel, profitShareDealsList, propertyFitText, publicCompanyStatus, rankDisplay, ratingSelect, releaseBtn, researchContent, researchLockedBanner, researchLockedHint, revoltCountDisplay, rewriteOptionsList, runtimeRange, runtimeValueText, scheduleRange, scheduleValueText, scriptDevPanel, scriptReportBlock, scriptReportBody, sfxHouseDescText, sfxHouseSelect, sfxRange, sfxValue, slotReportBody, star1Select, star2Select, strategyDescText, strategySelect, studioBioBody, studioDataPanel, studioLogoDisplay, studioNameInput, studioRumorsBody, studioTierLine, takeEquityBtn, takeInvestorBtn, takeLoanBtn, theaterRange, theaterValue, timeControls, weekYearDisplay, writerSelect, yearInReviewText } from './dom-refs.js';
 
 export function computePlayerRank(){
     var ranked = [{name:player.name, prestige:player.prestige, isPlayer:true}];
@@ -24,6 +27,7 @@ export function computePlayerRank(){
 
 export function renderHeader(){
     studioNameInput.value = player.name;
+    if(studioLogoDisplay){ studioLogoDisplay.innerHTML = studioLogoSVG(player.logoKind||'star', 40); }
     cashDisplay.textContent = formatMoney(player.cash);
     cashDisplay.className = player.cash<0 ? 'value neg' : 'value';
     prestigeDisplay.textContent = Math.round(player.prestige);
@@ -144,7 +148,7 @@ export function renderGenreTracker(){
       var trendArrow = demand>prev+3 ? '📈' : demand<prev-3 ? '📉' : '➖';
       var saturation = getSaturation(g);
       var rec = genreRecommendation(demand, saturation);
-      return '<div class="genre-track-row"><div class="genre-track-top"><span class="genre-track-name">'+g+'</span><span class="divergence-tag '+rec.cls+'">'+rec.label+'</span></div>'+
+      return '<div class="genre-track-row"><div class="genre-track-top"><span class="genre-track-name">'+genreBadgeSVG(g,20)+' '+g+'</span><span class="divergence-tag '+rec.cls+'">'+rec.label+'</span></div>'+
         '<div class="genre-track-bar-wrap"><div class="genre-track-bar" style="width:'+demand+'%;"></div><div class="genre-track-sat-marker" style="left:'+saturation+'%;"></div></div>'+
         '<div class="genre-track-meta"><span>Demand '+demand+' '+trendArrow+'</span><span>Saturation '+saturation+'</span></div></div>';
     }).join('');
@@ -158,7 +162,7 @@ export function renderHistory(){
     var rows = player.moviesAll.slice().reverse().map(function(m){
       var gradient = GENRE_GRADIENTS[m.genre] || GENRE_GRADIENTS.Action;
       return '<tr>'+
-        '<td><div class="history-poster-thumb" style="background:'+gradient+';"></div></td>'+
+        '<td><div class="history-poster-thumb" style="background:'+gradient+';">'+genreBadgeSVG(m.genre,18)+'</div></td>'+
         '<td>'+escapeHtml(m.title)+'</td>'+
         '<td>'+m.genre+'</td>'+
         '<td>Y'+m.releaseYear+' W'+weekInYearOf(m.releaseWeek)+'</td>'+
@@ -607,6 +611,32 @@ export function renderDepartmentsGrid(){
         (unlocked ? '<div class="dept-card-status open">✅ Open</div>' : '<div class="dept-card-status">🔒 '+escapeHtml(d.unlockHint||'Locked')+'</div>')+
       '</div>';
     }).join('');
+    renderLegalPanel();
+  }
+
+// The Legal Department's own panel — separate from the generic Departments grid
+// above because, once unlocked, it has actual live state to show: the Legal Risk
+// meter and the Case Log. Hidden entirely below 60 Prestige, same threshold the
+// Departments grid already checks for the "Legal" card.
+export function renderLegalPanel(){
+    if(!legalDeptPanel) return;
+    var unlocked = legalDeptUnlocked();
+    legalDeptPanel.classList.toggle('hidden', !unlocked);
+    if(!unlocked) return;
+    ensureLegalState();
+    var risk = player.legalRisk||0;
+    var tier = legalRiskTierLabel(risk);
+    legalRiskLabel.textContent = tier.label+' · '+Math.round(risk)+'/100';
+    legalRiskLabel.className = tier.cls;
+    legalRiskBar.style.width = risk+'%';
+    var log = player.legalCaseLog||[];
+    if(log.length===0){
+      legalCaseLog.innerHTML = '<p class="hint">No cases yet. Nothing\u2019s crossed counsel\u2019s desk.</p>';
+    } else {
+      legalCaseLog.innerHTML = log.map(function(l){
+        return '<div class="legal-log-row"><span>'+escapeHtml(l.title)+' \u2014 '+escapeHtml(l.result)+'</span><span class="'+(l.cls==='pos'?'pos':'neg')+'">'+escapeHtml(l.detail)+'</span></div>';
+      }).join('');
+    }
   }
 
 export function renderStudioBio(){

@@ -2,7 +2,8 @@ import { GENRE_GRADIENTS, escapeHtml, formatMoney, rollProducerNegotiation } fro
 import { game } from '../state/game-state.js';
 import { RELEASE_STRATEGIES } from '../systems/release-strategy.js';
 import { weekInYearOf, yearOf } from '../systems/market.js';
-import { genreSelect, movieCardCast, movieCardMeta, movieCardQH, movieCardRiskLabel, movieCardRows, movieCardTitle, movieTaglineInput, movieTitleInput, moviePoster, moviePosterTitle, negotiateBtn, negotiateResult, ratingSelect, riskMarker, scheduleRange, strategySelect, wizardStepDots, wizardStepPanels } from './dom-refs.js';
+import { genreSelect, movieCardCast, movieCardMeta, movieCardQH, movieCardRiskLabel, movieCardRows, movieCardTitle, movieTaglineInput, movieTitleInput, moviePoster, moviePosterBadge, moviePosterTitle, negotiateBtn, negotiateResult, ratingSelect, riskMarker, scheduleRange, strategySelect, wizardStepDots, wizardStepPanels } from './dom-refs.js';
+import { genreBadgeSVG } from './genre-badges.js';
 import { computeGreenlightPreview, getSelectedTalent } from './render.js';
 import { tutorialOnWizardStep } from './tutorial.js';
 
@@ -29,6 +30,7 @@ export function renderMovieCard(){
   var title = movieTitleInput.value.trim() || 'Untitled Picture';
   var genre = genreSelect.value;
   moviePoster.style.background = GENRE_GRADIENTS[genre] || GENRE_GRADIENTS.Action;
+  if(moviePosterBadge){ moviePosterBadge.innerHTML = genreBadgeSVG(genre, 34); }
   moviePosterTitle.innerHTML = escapeHtml(title.toUpperCase()).replace(/ /g, '<br>');
   movieCardTitle.textContent = title;
   movieCardMeta.textContent = genre+' · '+ratingSelect.value+(movieTaglineInput.value.trim() ? ' · "'+movieTaglineInput.value.trim()+'"' : '');

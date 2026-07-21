@@ -4,8 +4,8 @@ import { PERSONALITY_KEYS } from '../systems/rival-personalities.js';
 import { saveStatusLine, synopsisInput, synopsisWordCount } from '../ui/dom-refs.js';
 import { addNews, populateTalentSelects, renderAll } from '../ui/render.js';
 
-export function freshPlayer(tier, name){
-    return { name:name||'Player Studio', cash:tier.cash, prestige:tier.prestige, moviesAll:[], totalOverheadPaid:0, awardsWon:[], passiveIncomeStreams:[] };
+export function freshPlayer(tier, name, logoKind){
+    return { name:name||'Player Studio', cash:tier.cash, prestige:tier.prestige, moviesAll:[], totalOverheadPaid:0, awardsWon:[], passiveIncomeStreams:[], logoKind:logoKind||'star' };
   }
 
 export function freshAIStudios(tier){
@@ -101,6 +101,9 @@ export function restoreGame(data){
     currentTier = findTier(data.tierId);
     player = data.player;
     player.awardsWon = player.awardsWon || [];
+    player.legalRisk = player.legalRisk!=null ? player.legalRisk : 0;
+    player.legalCaseLog = player.legalCaseLog || [];
+    player.logoKind = player.logoKind || 'star';
     aiStudios = data.aiStudios;
     setTalentRosters(data.writers, data.directors, data.stars, data.composers, data.producers, data.sfxHouses);
     finance = data.finance || freshFinance();
@@ -180,9 +183,9 @@ export function importSaveFile(file){
   }
 
 
-export function foundNewStudio(tier, name){
+export function foundNewStudio(tier, name, logoKind){
   currentTier = tier;
-  player = freshPlayer(tier, name);
+  player = freshPlayer(tier, name, logoKind);
   aiStudios = freshAIStudios(tier);
   finance = freshFinance();
   resetGenreDemandForNewStudio();

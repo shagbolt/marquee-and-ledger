@@ -24,6 +24,8 @@ export var studioCreationModal = $('studioCreationModal');
 export var newStudioNameInput = $('newStudioNameInput');
 
 export var tierOptionsList = $('tierOptionsList');
+export var logoOptionsList = $('logoOptionsList');
+export var studioLogoDisplay = $('studioLogoDisplay');
 
 export var foundStudioBtn = $('foundStudioBtn');
 
@@ -122,6 +124,10 @@ export var awardsHistoryTableBody = $('awardsHistoryTableBody');
 export var departmentsGrid = $('departmentsGrid');
 
 export var studioBioBody = $('studioBioBody');
+export var legalDeptPanel = $('legalDeptPanel');
+export var legalRiskLabel = $('legalRiskLabel');
+export var legalRiskBar = $('legalRiskBar');
+export var legalCaseLog = $('legalCaseLog');
 
 export var franchiseList = $('franchiseList');
 export var talentRoleFilter = $('talentRoleFilter');
@@ -151,6 +157,7 @@ export var timeControls = $('timeControls');
 export var preprodPanel = $('preprodPanel');
 export var wizardSteps = $('wizardSteps');
 export var moviePoster = $('moviePoster');
+export var moviePosterBadge = $('moviePosterBadge');
 export var moviePosterTitle = $('moviePosterTitle');
 export var movieCardTitle = $('movieCardTitle');
 export var movieCardMeta = $('movieCardMeta');

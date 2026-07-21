@@ -2,6 +2,8 @@ import { STUDIO_TIERS, escapeHtml, findTier, formatMoney } from './data/constant
 import { confirmGreenlight, fastForwardShoot, greenlightCancel, greenlightDelay, greenlightIncreaseBudget, greenlightReduceScope, openGreenlightReview, processNextWeek } from './flow/production-flow.js';
 import { advanceWeek } from './flow/turn-flow.js';
 import { finalizeInternational, finalizeStreamingDeal, showFinaleModal, skipInternational, updateStreamingPreview } from './flow/release-flow.js';
+import { checkLegalTrigger } from './flow/legal-flow.js';
+import { STUDIO_LOGOS, studioLogoSVG } from './ui/studio-logo.js';
 import { SAVE_KEY, awardsQueue, exportSaveFile, foundNewStudio, game, importSaveFile, loadGameFromLocalStorage, player, saveGameToLocalStorage } from './state/game-state.js';
 import { advanceBackgroundSim } from './systems/ai-studios.js';
 import { maybeShowNextAward } from './systems/awards.js';
@@ -10,7 +12,7 @@ import { checkChallengeExpiry } from './systems/studio-challenges.js';
 import { checkSeasonFinale } from './systems/season-finale.js';
 import { goPublic, investorTerms, loanInterestRate, takeLoan, takeProfitShareDeal, yearOf } from './systems/market.js';
 import { REWRITE_OPTIONS, analyzeSynopsis, scaledCost } from './systems/release-strategy.js';
-import { analyzeScriptBtn, awardsCloseBtn, awardsModal, backToLaunchChoiceBtn, chBillboards, chOnline, chTV, chTrailers, clearScriptBtn, composerSelect, confirmInternationalBtn, continueSavedGameBtn, demographicSelect, destBtns, directorSelect, exportSaveBtn, fastForwardBtn, festivalSelect, finaleCloseBtn, finaleModal, filmingFastForwardBtn, finalizeStreamingBtn, foundStudioBtn, genreSelect, goPublicBtn, greenlightCancelBtn, helpBtn, helpCloseBtn, helpModal, greenlightConfirmBtn, greenlightDelayBtn, greenlightIncreaseBudgetBtn, greenlightModal, greenlightReduceScopeBtn, greenlightRewriteBtn, importFileInput, importSaveBtn, launchChoicePanel, loadGameBtn, loanAmountRange, loanAmountValue, marketingRange, movieDetailCloseBtn, movieDetailModal, movieTaglineInput, negotiateBtn, movieTitleInput, newStudioFormPanel, newStudioNameInput, nowShowingContent, nowShowingPlaceholder, objectivePrimaryBtn, outcomeSummary, outcomeSummaryCloseBtn, producerSelect, ratingSelect, releaseBtn, resetBtn, rewriteOptionsList, runtimeRange, saveGameBtn, scheduleRange, sfxHouseSelect, sfxRange, showNewStudioFormBtn, skipInternationalBtn, skipWeeksBtn, skipWeeksSelect, skipYearBtn, star1Select, star2Select, strategySelect, streamingPlatformSelect, streamingWindowSelect, studioCreationModal, studioNameInput, summaryCloseBtn, summaryModal, synopsisInput, synopsisWordCount, tabBtns, tabPanels, takeEquityBtn, takeInvestorBtn, takeLoanBtn, talentRoleFilter, talentSortBy, theaterRange, themeToggleBtn, tierOptionsList, wizardBackBtns, wizardNextBtns, writerSelect } from './ui/dom-refs.js';
+import { analyzeScriptBtn, awardsCloseBtn, awardsModal, backToLaunchChoiceBtn, chBillboards, chOnline, chTV, chTrailers, clearScriptBtn, composerSelect, confirmInternationalBtn, continueSavedGameBtn, demographicSelect, destBtns, directorSelect, exportSaveBtn, fastForwardBtn, festivalSelect, finaleCloseBtn, finaleModal, filmingFastForwardBtn, finalizeStreamingBtn, foundStudioBtn, genreSelect, goPublicBtn, greenlightCancelBtn, helpBtn, helpCloseBtn, helpModal, greenlightConfirmBtn, greenlightDelayBtn, greenlightIncreaseBudgetBtn, greenlightModal, greenlightReduceScopeBtn, greenlightRewriteBtn, importFileInput, importSaveBtn, launchChoicePanel, loadGameBtn, logoOptionsList, studioLogoDisplay, loanAmountRange, loanAmountValue, marketingRange, movieDetailCloseBtn, movieDetailModal, movieTaglineInput, negotiateBtn, movieTitleInput, newStudioFormPanel, newStudioNameInput, nowShowingContent, nowShowingPlaceholder, objectivePrimaryBtn, outcomeSummary, outcomeSummaryCloseBtn, producerSelect, ratingSelect, releaseBtn, resetBtn, rewriteOptionsList, runtimeRange, saveGameBtn, scheduleRange, sfxHouseSelect, sfxRange, showNewStudioFormBtn, skipInternationalBtn, skipWeeksBtn, skipWeeksSelect, skipYearBtn, star1Select, star2Select, strategySelect, streamingPlatformSelect, streamingWindowSelect, studioCreationModal, studioNameInput, summaryCloseBtn, summaryModal, synopsisInput, synopsisWordCount, tabBtns, tabPanels, takeEquityBtn, takeInvestorBtn, takeLoanBtn, talentRoleFilter, talentSortBy, theaterRange, themeToggleBtn, tierOptionsList, wizardBackBtns, wizardNextBtns, writerSelect } from './ui/dom-refs.js';
 import { addNews, populateTalentSelects, renderAll, renderBudgetSummary, renderScriptReport } from './ui/render.js';
 import { renderTalentTab } from './ui/talent-tab.js';
 import { goToStep, renderMovieCard, runNegotiation } from './ui/wizard.js';
@@ -205,6 +207,7 @@ summaryCloseBtn.addEventListener('click', function(){
     renderAll();
     maybeShowNextAward();
     tutorialCheckUnlocks(player);
+    checkLegalTrigger();
   });
 
 awardsCloseBtn.addEventListener('click', function(){
@@ -266,8 +269,19 @@ export function renderTierOptions(){
     }).join('');
   }
 
+export function renderLogoOptions(){
+    if(!logoOptionsList) return;
+    logoOptionsList.innerHTML = STUDIO_LOGOS.map(function(l, i){
+      return '<label class="logo-card">'+
+        '<input type="radio" name="logoChoice" value="'+l.id+'"'+(i===0?' checked':'')+'>'+
+        '<div class="logo-card-body">'+studioLogoSVG(l.id, 52)+'<div class="logo-card-label">'+escapeHtml(l.label)+'</div></div>'+
+      '</label>';
+    }).join('');
+  }
+
 export function beginStudioCreationScreen(){
     renderTierOptions();
+    renderLogoOptions();
     var hasSave = false;
     try{ hasSave = !!localStorage.getItem(SAVE_KEY); }catch(e){ hasSave = false; }
     launchChoicePanel.classList.toggle('hidden', !hasSave);
@@ -310,8 +324,10 @@ backToLaunchChoiceBtn.addEventListener('click', function(){
 foundStudioBtn.addEventListener('click', function(){
     var chosen = document.querySelector('input[name="tierChoice"]:checked');
     var tier = findTier(chosen ? chosen.value : 'indie');
+    var chosenLogo = document.querySelector('input[name="logoChoice"]:checked');
+    var logoKind = chosenLogo ? chosenLogo.value : 'star';
     var name = newStudioNameInput.value.trim() || 'Player Studio';
-    foundNewStudio(tier, name);
+    foundNewStudio(tier, name, logoKind);
     game.currentScript = null;
     game.seasonGoal = null;
     checkSeasonGoalYearEnd();

@@ -1,6 +1,7 @@
 import { GENRE_GRADIENTS, escapeHtml, formatMoney } from '../data/constants.js';
 import { weekInYearOf } from '../systems/market.js';
 import { movieDetailBody, movieDetailModal } from './dom-refs.js';
+import { genreBadgeSVG } from './genre-badges.js';
 
 function prestigeOf(movie, key, liveEntity){
   if(movie.prestigeAtRelease && movie.prestigeAtRelease[key]!=null) return movie.prestigeAtRelease[key];
@@ -44,7 +45,7 @@ export function showMovieDetail(movie){
 
   movieDetailBody.innerHTML =
     '<div class="movie-detail-hero">'+
-      '<div class="movie-poster" style="background:'+gradient+';"><span>'+escapeHtml(movie.title.toUpperCase()).replace(/ /g,'<br>')+'</span></div>'+
+      '<div class="movie-poster" style="background:'+gradient+';"><div class="poster-genre-badge">'+genreBadgeSVG(movie.genre, 30)+'</div><span>'+escapeHtml(movie.title.toUpperCase()).replace(/ /g,'<br>')+'</span></div>'+
       '<div>'+
         '<div class="reveal-title" style="text-align:left;margin:0;">'+escapeHtml(movie.title)+'</div>'+
         '<div class="receipt-sub" style="margin:2px 0 8px;">'+movie.genre+' • '+movie.rating+' • Released Year '+movie.releaseYear+', Week '+weekInYearOf(movie.releaseWeek)+'</div>'+

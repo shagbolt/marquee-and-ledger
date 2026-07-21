@@ -7,6 +7,7 @@ import { applyProfitShareDeductions, weekInYearOf, yearOf } from '../systems/mar
 import { INTL_MARKETS, computeApprovalChance, estimateMarketRevenue, marketCost } from '../systems/release-strategy.js';
 import { computeStreamingRevenue, cultStreamEligible } from '../systems/streaming.js';
 import { applyPrestigeDelta, commercialPrestigeComponent, logPrestigeChange, reviewPrestigeComponent, verdictInfo } from '../systems/talent-quality.js';
+import { legalRiskAdjust } from '../systems/legal.js';
 import { awardsBody, awardsModal, awardsYearLabel, finaleBody, finaleModal, finaleTitle, finalizeStreamingBtn, internationalMarketsList, internationalModal, internationalSummaryLine, intlTotalCostDisplay, platformDescription, streamingModal, streamingPlatformSelect, streamingPreviewAmount, streamingTheatricalSummary, streamingWindowSelect, summaryBody, summaryModal, $ } from '../ui/dom-refs.js';
 import { computePlayerRank } from '../ui/render.js';
 import { getSeasonGoalLabel } from '../systems/season-goals.js';
@@ -87,6 +88,7 @@ export function finalizeInternational(){
       var revenue = approved ? Math.round(estimateMarketRevenue(m, movie)*rand(0.8,1.2)) : 0;
       totalRevenue += revenue;
       results.push({ market:m.name, icon:m.icon, cost:marketCost(m, movie), approved:approved, revenue:revenue });
+      if(!approved){ legalRiskAdjust(2); }
     });
     movie.internationalCost = totalCost;
     movie.internationalRevenue = totalRevenue;
@@ -172,6 +174,7 @@ export function finalizeStreamingDeal(){
     movie.verdictCls = info.cls;
     movie.releaseYear = yearOf(movie.releaseWeek);
     if(info.cls==='blockbuster'){ markPlayerHeat(movie.genre); }
+    if(info.cls==='bomb'){ legalRiskAdjust(9); }
 
     player.cash += movie.theatricalRevenue + movie.streamingRevenue + (movie.internationalRevenue||0);
     movie.investorCut = applyProfitShareDeductions(movie);

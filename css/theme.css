@@ -251,7 +251,8 @@
   .genre-track-row{ padding:9px 0; border-bottom:1px dashed var(--border); }
   .genre-track-row:last-child{ border-bottom:none; }
   .genre-track-top{ display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:5px; }
-  .genre-track-name{ font-family:var(--font-display); letter-spacing:0.03em; font-size:0.94rem; color:var(--ink); }
+  .genre-track-name{ font-family:var(--font-display); letter-spacing:0.03em; font-size:0.94rem; color:var(--ink); display:inline-flex; align-items:center; gap:6px; }
+  .genre-track-name svg{ display:block; border-radius:5px; }
   .genre-track-top .divergence-tag{ font-size:0.6rem; padding:2px 8px; white-space:nowrap; }
   .genre-track-bar-wrap{ position:relative; height:8px; background:var(--panel-alt); border-radius:4px; border:1px solid var(--border); }
   .genre-track-bar{ height:100%; border-radius:4px; background:linear-gradient(90deg,var(--fill-gold-2),var(--fill-gold-1)); transition:width 0.3s ease; }
@@ -473,7 +474,8 @@
   .talent-films{ display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
   .talent-film-chip{ font-size:0.68rem; padding:2px 7px; border-radius:5px; font-weight:600; }
 
-  .history-poster-thumb{ width:32px; height:44px; border-radius:4px; border:1px solid var(--border); }
+  .history-poster-thumb{ width:32px; height:44px; border-radius:4px; border:1px solid var(--border); position:relative; display:flex; align-items:center; justify-content:center; }
+  .history-poster-thumb svg{ filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
 
   .movie-detail-hero{ display:flex; gap:14px; align-items:flex-start; margin-bottom:16px; }
   .movie-detail-hero .movie-poster{ width:80px; min-width:80px; height:108px; }
@@ -621,8 +623,14 @@
   .movie-poster{
     width:96px; min-width:96px; height:128px; border-radius:6px; border:1px solid var(--gold);
     display:flex; align-items:center; justify-content:center; text-align:center; padding:8px;
+    position:relative; overflow:visible;
   }
   .movie-poster span{ font-family:var(--font-display); font-size:0.95rem; letter-spacing:0.03em; color:var(--gold-bright); line-height:1.2; }
+  .poster-genre-badge{
+    position:absolute; top:-8px; left:-8px; transform:rotate(-8deg);
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5)); line-height:0;
+  }
+  .poster-genre-badge svg{ border-radius:8px; }
   .movie-card-info{ flex:1; min-width:0; }
   .movie-card-title{ font-family:var(--font-display); font-size:1.15rem; letter-spacing:0.02em; color:var(--ink); }
   .movie-card-meta{ font-size:0.76rem; color:var(--ink-dim); margin-bottom:8px; }
@@ -685,6 +693,22 @@
   .tier-card-stats{ font-family:var(--font-mono); font-size:0.7rem; color:var(--ink-dim); margin:3px 0; }
   .tier-card-blurb{ font-size:0.8rem; color:var(--ink-dim); font-style:italic; margin-top:3px; }
 
+  /* Studio Creation logo picker */
+  .logo-options-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin:8px 0 16px 0; }
+  .logo-card{ cursor:pointer; }
+  .logo-card input[type=radio]{ display:none; }
+  .logo-card-body{
+    display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px;
+    border:1px solid var(--border); border-radius:8px; text-align:center;
+  }
+  .logo-card:hover .logo-card-body{ border-color:var(--gold); }
+  .logo-card input[type=radio]:checked + .logo-card-body{ border-color:var(--gold); background:var(--panel-alt); box-shadow:0 0 0 1px var(--gold) inset; }
+  .logo-card-label{ font-size:0.68rem; color:var(--ink-dim); }
+
+  /* Masthead logo */
+  .studio-logo-display{ line-height:0; flex-shrink:0; }
+  .studio-logo-display svg{ display:block; }
+
   /* Tabbed main area */
   .destination-nav{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:14px; }
   .dest-btn{
@@ -746,6 +770,33 @@
   .dept-card-desc{ font-size:0.72rem; color:var(--ink-dim); min-height:32px; }
   .dept-card-status{ margin-top:6px; font-size:0.7rem; font-weight:700; color:var(--ink-dim); }
   .dept-card-status.open{ color:var(--emerald); }
+
+  /* ===== Legal Department ===== */
+  .legal-inhouse-row{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    background:var(--panel-alt); border:1px solid var(--border); border-radius:8px;
+    padding:10px 14px; margin:14px 0;
+  }
+  .legal-inhouse-title{ font-weight:700; font-size:0.85rem; color:var(--ink); }
+  .legal-inhouse-sub{ font-size:0.72rem; color:var(--ink-dim); margin-top:2px; }
+  .legal-inhouse-status{ font-size:0.7rem; font-weight:700; color:var(--emerald); white-space:nowrap; }
+  .legal-risk-block{ margin-bottom:18px; }
+  .legal-risk-top{ display:flex; justify-content:space-between; font-size:0.78rem; color:var(--ink-dim); margin-bottom:4px; }
+  .legal-risk-top span:last-child{ font-weight:700; }
+  .legal-risk-top .risk-minimal{ color:var(--emerald); }
+  .legal-risk-top .risk-low{ color:var(--emerald); }
+  .legal-risk-top .risk-moderate{ color:#d98a2b; }
+  .legal-risk-top .risk-severe{ color:var(--crimson); }
+  .legal-risk-bar-wrap{ height:8px; background:var(--panel-alt); border-radius:4px; overflow:hidden; }
+  .legal-risk-bar{ height:100%; background:linear-gradient(90deg, var(--emerald), #d98a2b, var(--crimson)); transition:width 0.3s; }
+  .legal-risk-hint{ font-size:0.7rem; color:var(--ink-dim); margin-top:4px; }
+  .legal-case-log-title{ font-weight:700; font-size:0.85rem; color:var(--ink); margin-bottom:6px; }
+  .legal-log-row{
+    display:flex; justify-content:space-between; gap:10px; font-size:0.75rem;
+    background:var(--panel-alt); border-radius:5px; padding:7px 10px; margin-bottom:6px;
+  }
+  .legal-log-row .pos{ color:var(--emerald); font-weight:700; }
+  .legal-log-row .neg{ color:var(--crimson); font-weight:700; }
 
   /* Event modal reuses the awards-modal control-room look, with a crimson accent to signal risk */
   .event-modal{
